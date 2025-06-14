@@ -1,5 +1,5 @@
 
-import { masterOrchestrator, AgentMessage, JobCreationRequest, CandidateEvaluationRequest } from './aiAgents';
+import { supabaseAgentService } from './supabaseAgentService';
 
 interface AgentState {
   activeJobs: any[];
@@ -16,147 +16,122 @@ class AgentCommunicationService {
     systemStatus: 'idle'
   };
 
-  private listeners: Array<(state: AgentState) => void> = [];
+  private stateSubscribers: ((state: AgentState) => void)[] = [];
 
-  subscribeToState(listener: (state: AgentState) => void) {
-    this.listeners.push(listener);
-    // Immediately call with current state
-    listener(this.state);
+  constructor() {
+    this.initializeWithSupabaseData();
   }
 
-  unsubscribeFromState(listener: (state: AgentState) => void) {
-    this.listeners = this.listeners.filter(l => l !== listener);
-  }
-
-  private notifyListeners() {
-    this.listeners.forEach(listener => listener({ ...this.state }));
-  }
-
-  async createJobAd(jobRequest: JobCreationRequest) {
-    this.state.systemStatus = 'processing';
-    this.notifyListeners();
-
+  private async initializeWithSupabaseData() {
+    console.log('[Agent Communication] Initializing with Supabase data');
+    this.setState({ systemStatus: 'processing' });
+    
     try {
-      const message: AgentMessage = {
-        id: Date.now().toString(),
-        type: 'job_creation',
-        payload: jobRequest,
-        timestamp: new Date().toISOString(),
-        agentId: 'orchestrator'
-      };
-
-      const result = await masterOrchestrator.processMessage(message);
+      // Load initial evaluations from Supabase data
+      await supabaseAgentService.evaluateCandidatesAgainstJobs();
       
-      this.state.activeJobs.unshift({
-        ...result.jobAd,
-        id: result.jobId,
-        linkedInPostId: result.linkedInPostId,
-        status: result.status,
-        createdAt: new Date().toISOString().split('T')[0]
+      this.setState({
+        systemStatus: 'idle',
+        evaluationResults: [
+          ...supabaseAgentService.getRecommendedCandidates(),
+          ...supabaseAgentService.getNonRecommendedCandidates()
+        ],
+        activeJobs: supabaseAgentService.getJobAds()
       });
+      
+      console.log('[Agent Communication] Initialized with real Supabase data');
+    } catch (error) {
+      console.error('[Agent Communication] Error initializing:', error);
+      this.setState({ systemStatus: 'error' });
+    }
+  }
 
-      this.state.systemStatus = 'idle';
-      this.notifyListeners();
+  subscribeToState(callback: (state: AgentState) => void) {
+    this.stateSubscribers.push(callback);
+    // Immediately call with current state
+    callback(this.state);
+  }
 
+  unsubscribeFromState(callback: (state: AgentState) => void) {
+    const index = this.stateSubscribers.indexOf(callback);
+    if (index > -1) {
+      this.stateSubscribers.splice(index, 1);
+    }
+  }
+
+  private setState(newState: Partial<AgentState>) {
+    this.state = { ...this.state, ...newState };
+    this.stateSubscribers.forEach(callback => callback(this.state));
+  }
+
+  async createJobAd(jobData: any) {
+    console.log('[Agent Communication] Creating job ad with Supabase integration');
+    this.setState({ systemStatus: 'processing' });
+    
+    try {
+      const result = await supabaseAgentService.createJobAdFromDatabase(jobData);
+      
+      this.setState({
+        activeJobs: [...this.state.activeJobs, result],
+        systemStatus: 'idle'
+      });
+      
       return result;
     } catch (error) {
-      this.state.systemStatus = 'error';
-      this.notifyListeners();
+      console.error('[Agent Communication] Error creating job ad:', error);
+      this.setState({ systemStatus: 'error' });
       throw error;
     }
   }
 
-  async evaluateCandidate(candidateRequest: CandidateEvaluationRequest) {
-    this.state.systemStatus = 'processing';
-    this.notifyListeners();
-
+  async evaluateCandidate(candidateData: any) {
+    console.log('[Agent Communication] Evaluating candidate with real data');
+    this.setState({ systemStatus: 'processing' });
+    
     try {
-      const message: AgentMessage = {
-        id: Date.now().toString(),
-        type: 'candidate_evaluation',
-        payload: candidateRequest,
-        timestamp: new Date().toISOString(),
-        agentId: 'orchestrator'
-      };
-
-      const result = await masterOrchestrator.processMessage(message);
+      const evaluations = await supabaseAgentService.evaluateCandidatesAgainstJobs();
       
-      // Add to evaluation results
-      this.state.evaluationResults.push(result);
+      this.setState({
+        evaluationResults: evaluations,
+        systemStatus: 'idle'
+      });
       
-      // Add to appropriate candidate list
-      const candidateWithEvaluation = {
-        ...candidateRequest.candidateData,
-        id: result.candidateId,
-        jobId: result.jobId,
-        score: result.score,
-        recommendation: result.recommendation,
-        reasoning: result.reasoning,
-        strengths: result.strengths,
-        weaknesses: result.weaknesses,
-        evaluatedAt: new Date().toISOString()
-      };
-
-      this.state.candidates.unshift(candidateWithEvaluation);
-      this.state.systemStatus = 'idle';
-      this.notifyListeners();
-
-      return result;
+      return evaluations[evaluations.length - 1]; // Return latest evaluation
     } catch (error) {
-      this.state.systemStatus = 'error';
-      this.notifyListeners();
+      console.error('[Agent Communication] Error evaluating candidate:', error);
+      this.setState({ systemStatus: 'error' });
+      throw error;
+    }
+  }
+
+  async simulateCandidateApplication() {
+    console.log('[Agent Communication] Simulating candidate application');
+    this.setState({ systemStatus: 'processing' });
+    
+    try {
+      const newEvaluation = await supabaseAgentService.simulateCandidateApplication();
+      
+      if (newEvaluation) {
+        this.setState({
+          evaluationResults: [...this.state.evaluationResults, newEvaluation],
+          systemStatus: 'idle'
+        });
+      }
+      
+      return newEvaluation;
+    } catch (error) {
+      console.error('[Agent Communication] Error simulating application:', error);
+      this.setState({ systemStatus: 'error' });
       throw error;
     }
   }
 
   getRecommendedCandidates() {
-    return this.state.candidates.filter(c => c.recommendation === 'accept');
+    return supabaseAgentService.getRecommendedCandidates();
   }
 
   getNonRecommendedCandidates() {
-    return this.state.candidates.filter(c => c.recommendation === 'reject');
-  }
-
-  getActiveJobs() {
-    return this.state.activeJobs;
-  }
-
-  getSystemStatus() {
-    return this.state.systemStatus;
-  }
-
-  // Simulate incoming candidate applications
-  async simulateCandidateApplication(jobId: string) {
-    const mockCandidates = [
-      {
-        name: 'Sarah Chen',
-        resume: 'Senior Software Engineer with 6 years of experience in React, TypeScript, and Node.js. Led multiple high-impact projects.',
-        skills: ['React', 'TypeScript', 'Node.js', 'GraphQL', 'AWS', 'Docker'],
-        experience: '6 years of full-stack development experience, including 2 years in senior roles'
-      },
-      {
-        name: 'Michael Rodriguez',
-        resume: 'Full-stack developer with expertise in modern web technologies. Strong background in agile development.',
-        skills: ['JavaScript', 'Vue.js', 'Python', 'PostgreSQL'],
-        experience: '3 years of web development experience'
-      },
-      {
-        name: 'Emily Johnson',
-        resume: 'Junior developer passionate about learning new technologies. Recent bootcamp graduate.',
-        skills: ['HTML', 'CSS', 'JavaScript', 'React'],
-        experience: '1 year of professional development experience'
-      }
-    ];
-
-    for (const candidate of mockCandidates) {
-      await this.evaluateCandidate({
-        jobId,
-        candidateData: candidate
-      });
-      
-      // Add delay between evaluations
-      await new Promise(resolve => setTimeout(resolve, 500));
-    }
+    return supabaseAgentService.getNonRecommendedCandidates();
   }
 }
 
