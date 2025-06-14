@@ -14,7 +14,7 @@ import Navigation from "@/components/Navigation";
 
 const Ads = () => {
   const { toast } = useToast();
-  const { activeJobs, systemStatus, createJobAd, simulateCandidateApplication } = useAgentState();
+  const { activeJobs, systemStatus, createJobAd, simulateCandidateApplication, deleteJobAd, updateJobAd } = useAgentState();
   const [isCreating, setIsCreating] = useState(false);
   const [selectedJob, setSelectedJob] = useState<any>(null);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
@@ -94,22 +94,50 @@ const Ads = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleSaveEdit = () => {
-    // In a real implementation, this would update the job in the database
-    toast({
-      title: "Job Updated",
-      description: "The job advertisement has been updated successfully.",
-    });
-    setIsEditDialogOpen(false);
+  const handleSaveEdit = async () => {
+    if (!selectedJob) return;
+    
+    try {
+      await updateJobAd(selectedJob.id, {
+        title: editJobData.title,
+        company: editJobData.company,
+        location: editJobData.location,
+        description: editJobData.description,
+        requirements: editJobData.requirements.split(',').map(req => req.trim()),
+        salary: editJobData.salary
+      });
+
+      toast({
+        title: "Job Updated",
+        description: "The job advertisement has been updated successfully.",
+      });
+      setIsEditDialogOpen(false);
+    } catch (error) {
+      console.error('Error updating job:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update job advertisement. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleDeleteJob = (jobId: string, jobTitle: string) => {
-    // In a real implementation, this would delete the job from the database
-    toast({
-      title: "Job Deleted",
-      description: `"${jobTitle}" has been deleted successfully.`,
-      variant: "destructive"
-    });
+  const handleDeleteJob = async (jobId: string, jobTitle: string) => {
+    try {
+      await deleteJobAd(jobId);
+      toast({
+        title: "Job Deleted",
+        description: `"${jobTitle}" has been deleted successfully.`,
+        variant: "destructive"
+      });
+    } catch (error) {
+      console.error('Error deleting job:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete job advertisement. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -119,6 +147,27 @@ const Ads = () => {
       case 'archived': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  // Function to clean and format job description text
+  const cleanJobDescription = (description: string) => {
+    if (!description) return '';
+    
+    // Remove JSON-like formatting and clean up the text
+    let cleaned = description
+      .replace(/[\{\}]/g, '') // Remove curly braces
+      .replace(/["']/g, '') // Remove quotes
+      .replace(/\\n/g, ' ') // Replace \n with spaces
+      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .replace(/^\w+:\s*/, '') // Remove property names like "description:"
+      .trim();
+    
+    // If it's still too long or looks like code, truncate it
+    if (cleaned.length > 200) {
+      cleaned = cleaned.substring(0, 200) + '...';
+    }
+    
+    return cleaned;
   };
 
   return (
@@ -301,7 +350,7 @@ const Ads = () => {
                           <div className="space-y-1">
                             <p className="font-medium">{ad.company}</p>
                             <p className="text-gray-600">{ad.location}</p>
-                            <p className="line-clamp-2">{ad.description}</p>
+                            <p className="line-clamp-2">{cleanJobDescription(ad.description)}</p>
                           </div>
                         </CardDescription>
                       </CardHeader>
@@ -365,7 +414,7 @@ const Ads = () => {
                                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                                     <AlertDialogAction 
                                       onClick={() => handleDeleteJob(ad.id, ad.title)}
-                                      className="bg-red-600 hover:bg-red-700"
+                      className="bg-red-600 hover:bg-red-700"
                                     >
                                       Delete
                                     </AlertDialogAction>
@@ -393,7 +442,7 @@ const Ads = () => {
               <div className="space-y-4">
                 <div>
                   <h4 className="font-semibold mb-2">Job Description</h4>
-                  <p className="text-sm text-gray-600">{selectedJob?.description}</p>
+                  <p className="text-sm text-gray-600">{cleanJobDescription(selectedJob?.description)}</p>
                 </div>
                 <div>
                   <h4 className="font-semibold mb-2">Requirements</h4>
