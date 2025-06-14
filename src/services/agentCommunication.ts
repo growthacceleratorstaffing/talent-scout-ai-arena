@@ -1,4 +1,3 @@
-
 import { supabaseAgentService } from './supabaseAgentService';
 
 interface AgentState {
@@ -52,27 +51,26 @@ class AgentCommunicationService {
   }
 
   private cleanUpJobAds(jobs: any[]) {
-    return jobs.filter(job => {
-      // Remove jobs with JSON-like descriptions or invalid data
-      if (!job.title || !job.company) return false;
-      
-      // Check if description contains JSON-like patterns
-      if (job.description && (
-        job.description.includes('{"') ||
-        job.description.includes('"}') ||
-        job.description.includes('\\n') ||
-        job.description.includes('description:') ||
-        job.description.length < 20
-      )) {
-        console.log('[Agent Communication] Removing job with invalid description:', job.title);
-        return false;
-      }
-      
-      return true;
-    }).map(job => ({
-      ...job,
-      description: this.cleanJobDescription(job.description)
-    }));
+    return jobs
+      .map(job => ({
+        ...job,
+        description: this.cleanJobDescription(job.description)
+      }))
+      .filter(job => {
+        // Remove jobs if, after cleaning, the description is empty, 'undefined', or 'null'
+        const desc = job.description?.toLowerCase?.() ?? '';
+        if (
+          !job.title ||
+          !job.company ||
+          desc === '' ||
+          desc === 'undefined' ||
+          desc === 'null'
+        ) {
+          console.log('[Agent Communication] Removing job with invalid/empty description:', job.title);
+          return false;
+        }
+        return true;
+      });
   }
 
   private cleanJobDescription(description: string) {
