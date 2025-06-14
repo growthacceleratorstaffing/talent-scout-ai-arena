@@ -200,7 +200,15 @@ async function syncAdAccounts(supabaseClient: any, userId: string) {
   
   const accessToken = await getLinkedInAccessToken()
   if (!accessToken) {
-    throw new Error('LinkedIn access token not found in environment variables. Please set LINKEDIN_ACCESS_TOKEN in your Supabase secrets.')
+    console.log('No LinkedIn access token found, returning empty result')
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        count: 0, 
+        message: 'No LinkedIn access token configured. Please set LINKEDIN_ACCESS_TOKEN in your Supabase secrets.'
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   }
 
   try {
@@ -319,7 +327,10 @@ async function syncCampaigns(supabaseClient: any, userId: string) {
   
   const accessToken = await getLinkedInAccessToken()
   if (!accessToken) {
-    throw new Error('LinkedIn access token not found')
+    return new Response(
+      JSON.stringify({ success: true, message: 'No LinkedIn access token found', count: 0 }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   }
 
   try {
@@ -396,7 +407,10 @@ async function syncLeads(supabaseClient: any, userId: string) {
   
   const accessToken = await getLinkedInAccessToken()
   if (!accessToken) {
-    throw new Error('LinkedIn access token not found')
+    return new Response(
+      JSON.stringify({ success: true, message: 'No LinkedIn access token found', count: 0 }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
   }
 
   try {
