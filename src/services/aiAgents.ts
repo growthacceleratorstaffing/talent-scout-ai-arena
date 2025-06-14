@@ -92,41 +92,73 @@ class MasterOrchestratorAgent {
 }
 
 class JobGeneratorAgent {
+  private async callAzureAI(prompt: string): Promise<string> {
+    try {
+      console.log('[Job Generator] Calling Azure AI Foundry for job generation');
+      
+      // Call Azure AI Foundry via Supabase edge function
+      const response = await fetch('/api/azure-ai', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt,
+          type: 'job_generation'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Azure AI call failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.content;
+    } catch (error) {
+      console.error('[Job Generator] Azure AI call failed, using fallback:', error);
+      return this.generateFallbackJobDescription();
+    }
+  }
+
+  private generateFallbackJobDescription(): string {
+    return `We are seeking a talented professional to join our innovative team. This role offers an exciting opportunity to work with cutting-edge technologies and contribute to meaningful projects.`;
+  }
+
   async generateJobAd(request: JobCreationRequest): Promise<any> {
-    console.log('[Job Generator] Creating job advertisement');
+    console.log('[Job Generator] Creating job advertisement using Azure AI');
     
-    // Simulate Azure AI Foundry API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    const prompt = `Create a professional job advertisement for the following position:
+    
+Role: ${request.role}
+Company: ${request.company}
+Location: ${request.location}
+Requirements: ${request.requirements.join(', ')}
+Additional Info: ${request.additionalInfo || 'N/A'}
+
+Please generate a compelling job description that includes:
+1. An engaging overview of the role
+2. Key responsibilities
+3. Required qualifications
+4. Company benefits
+5. Application instructions
+
+Make it professional yet appealing to attract top talent.`;
+
+    const aiGeneratedDescription = await this.callAzureAI(prompt);
     
     const generatedAd = {
       title: request.role,
       company: request.company,
       location: request.location,
-      description: this.generateDescription(request),
+      description: aiGeneratedDescription,
       requirements: request.requirements,
       benefits: this.generateBenefits(),
       salary: 'Competitive package',
       employmentType: 'Full-time'
     };
 
-    console.log('[Job Generator] Generated job ad:', generatedAd.title);
+    console.log('[Job Generator] Generated job ad with Azure AI:', generatedAd.title);
     return generatedAd;
-  }
-
-  private generateDescription(request: JobCreationRequest): string {
-    return `We are seeking a talented ${request.role} to join our innovative team at ${request.company}. 
-
-This role offers an exciting opportunity to work with cutting-edge technologies and contribute to meaningful projects that impact our business and customers. You'll be part of a collaborative environment where your expertise will be valued and your professional growth supported.
-
-Key Responsibilities:
-• Lead development of high-quality software solutions
-• Collaborate with cross-functional teams to deliver exceptional results
-• Mentor junior team members and contribute to technical excellence
-• Stay current with industry trends and best practices
-
-Location: ${request.location}
-
-Join us in shaping the future of technology while building a rewarding career in a supportive, dynamic environment.`;
   }
 
   private generateBenefits(): string[] {
@@ -142,29 +174,90 @@ Join us in shaping the future of technology while building a rewarding career in
 }
 
 class CandidateEvaluatorAgent {
+  private async callAzureAI(prompt: string): Promise<any> {
+    try {
+      console.log('[Candidate Evaluator] Calling Azure AI Foundry for candidate evaluation');
+      
+      // Call Azure AI Foundry via Supabase edge function
+      const response = await fetch('/api/azure-ai', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt,
+          type: 'candidate_evaluation'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Azure AI call failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return JSON.parse(data.content);
+    } catch (error) {
+      console.error('[Candidate Evaluator] Azure AI call failed, using fallback:', error);
+      return null;
+    }
+  }
+
   async evaluateCandidate(request: CandidateEvaluationRequest): Promise<EvaluationResult> {
-    console.log('[Candidate Evaluator] Analyzing candidate profile');
+    console.log('[Candidate Evaluator] Analyzing candidate profile with Azure AI');
     
-    // Simulate Azure AI Foundry evaluation
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    const prompt = `Evaluate the following candidate for job suitability:
+
+Candidate Name: ${request.candidateData.name}
+Skills: ${request.candidateData.skills.join(', ')}
+Experience: ${request.candidateData.experience}
+Resume: ${request.candidateData.resume}
+
+Please provide a JSON response with the following structure:
+{
+  "score": number (0-100),
+  "recommendation": "accept" or "reject",
+  "reasoning": "detailed explanation",
+  "strengths": ["strength1", "strength2"],
+  "weaknesses": ["weakness1", "weakness2"]
+}
+
+Evaluate based on:
+1. Technical skills alignment
+2. Experience level appropriateness
+3. Cultural fit indicators
+4. Growth potential`;
+
+    const aiEvaluation = await this.callAzureAI(prompt);
     
-    // Simple scoring algorithm (in real implementation, this would use Azure AI)
-    const skillMatch = this.calculateSkillMatch(request.candidateData.skills);
-    const experienceScore = this.calculateExperienceScore(request.candidateData.experience);
-    const overallScore = (skillMatch + experienceScore) / 2;
+    // Fallback to simple scoring if AI fails
+    const fallbackScore = this.calculateFallbackScore(request.candidateData);
     
     const result: EvaluationResult = {
       candidateId: `candidate_${Date.now()}`,
       jobId: request.jobId,
-      score: Math.round(overallScore),
-      recommendation: overallScore >= 70 ? 'accept' : 'reject',
-      reasoning: this.generateReasoning(overallScore, skillMatch, experienceScore),
-      strengths: this.identifyStrengths(request.candidateData),
-      weaknesses: this.identifyWeaknesses(request.candidateData)
+      score: aiEvaluation?.score || fallbackScore.score,
+      recommendation: aiEvaluation?.recommendation || fallbackScore.recommendation,
+      reasoning: aiEvaluation?.reasoning || fallbackScore.reasoning,
+      strengths: aiEvaluation?.strengths || fallbackScore.strengths,
+      weaknesses: aiEvaluation?.weaknesses || fallbackScore.weaknesses
     };
 
     console.log('[Candidate Evaluator] Evaluation complete:', result.recommendation, result.score);
     return result;
+  }
+
+  private calculateFallbackScore(candidateData: any) {
+    const skillMatch = this.calculateSkillMatch(candidateData.skills);
+    const experienceScore = this.calculateExperienceScore(candidateData.experience);
+    const overallScore = (skillMatch + experienceScore) / 2;
+    
+    return {
+      score: Math.round(overallScore),
+      recommendation: overallScore >= 70 ? 'accept' : 'reject',
+      reasoning: this.generateReasoning(overallScore, skillMatch, experienceScore),
+      strengths: this.identifyStrengths(candidateData),
+      weaknesses: this.identifyWeaknesses(candidateData)
+    };
   }
 
   private calculateSkillMatch(skills: string[]): number {
