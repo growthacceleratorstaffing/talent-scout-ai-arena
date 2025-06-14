@@ -40,6 +40,8 @@ class AgentCommunicationService {
       });
       
       console.log('[Agent Communication] Initialized with real Supabase data');
+      console.log('Recommended candidates:', supabaseAgentService.getRecommendedCandidates().length);
+      console.log('Non-recommended candidates:', supabaseAgentService.getNonRecommendedCandidates().length);
     } catch (error) {
       console.error('[Agent Communication] Error initializing:', error);
       this.setState({ systemStatus: 'error' });

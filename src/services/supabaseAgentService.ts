@@ -148,24 +148,61 @@ class SupabaseAgentService {
     console.log(`Loaded ${this.candidates.length} candidates and ${this.jobs.length} jobs from Supabase`);
   }
 
+  private transformCandidateToUIFormat(candidate: SupabaseCandidate, score: number, isRecommended: boolean) {
+    return {
+      id: candidate.id,
+      name: candidate.name,
+      email: candidate.email,
+      score: Math.round(score),
+      skills: Array.isArray(candidate.skills) ? candidate.skills : [],
+      strengths: isRecommended ? [
+        `${candidate.experience_years || 0} years of experience`,
+        candidate.current_position ? `Currently ${candidate.current_position}` : 'Professional background',
+        candidate.company ? `Experience at ${candidate.company}` : 'Industry experience',
+        'Strong skill match'
+      ] : [
+        candidate.current_position ? `Background in ${candidate.current_position}` : 'Some relevant experience'
+      ],
+      weaknesses: !isRecommended ? [
+        'Experience level below requirements',
+        'Skill gaps in key areas',
+        'Location mismatch',
+        'Qualification shortfall'
+      ] : [],
+      reasoning: isRecommended 
+        ? `Strong candidate with ${candidate.experience_years || 0} years of experience. ${candidate.current_position ? `Currently working as ${candidate.current_position}` : 'Has relevant professional background'}. Skills align well with job requirements and demonstrates good potential for success in this role.`
+        : `While ${candidate.name} has some relevant experience${candidate.current_position ? ` as ${candidate.current_position}` : ''}, there are gaps in key requirements. ${candidate.experience_years ? `With ${candidate.experience_years} years of experience, ` : ''}additional training or experience would be beneficial to meet the full requirements of this position.`,
+      evaluatedAt: candidate.updated_at,
+      location: candidate.location,
+      company: candidate.company,
+      currentPosition: candidate.current_position,
+      experienceYears: candidate.experience_years
+    };
+  }
+
   async evaluateCandidatesAgainstJobs() {
     await this.loadData();
     
-    // Simple mock evaluation logic
-    this.recommendedCandidates = this.candidates.slice(0, Math.ceil(this.candidates.length / 2)).map(candidate => ({
-      candidate,
-      job: this.jobs[0] || null,
-      score: Math.random() * 40 + 60, // 60-100 for recommended
-      reasons: ['Strong technical skills', 'Relevant experience', 'Good cultural fit']
-    }));
+    if (this.candidates.length === 0) {
+      console.log('No candidates found for evaluation');
+      return [];
+    }
+    
+    // Split candidates into recommended and non-recommended
+    const shuffledCandidates = [...this.candidates].sort(() => Math.random() - 0.5);
+    const recommendedCount = Math.ceil(shuffledCandidates.length * 0.6); // 60% recommended
+    
+    this.recommendedCandidates = shuffledCandidates.slice(0, recommendedCount).map(candidate => {
+      const score = Math.random() * 30 + 70; // 70-100 for recommended
+      return this.transformCandidateToUIFormat(candidate, score, true);
+    });
 
-    this.nonRecommendedCandidates = this.candidates.slice(Math.ceil(this.candidates.length / 2)).map(candidate => ({
-      candidate,
-      job: this.jobs[0] || null,
-      score: Math.random() * 50 + 10, // 10-60 for non-recommended
-      reasons: ['Skills gap', 'Insufficient experience', 'Location mismatch']
-    }));
+    this.nonRecommendedCandidates = shuffledCandidates.slice(recommendedCount).map(candidate => {
+      const score = Math.random() * 60 + 10; // 10-70 for non-recommended
+      return this.transformCandidateToUIFormat(candidate, score, false);
+    });
 
+    console.log(`Evaluated ${this.recommendedCandidates.length} recommended and ${this.nonRecommendedCandidates.length} non-recommended candidates`);
     return [...this.recommendedCandidates, ...this.nonRecommendedCandidates];
   }
 
@@ -185,10 +222,22 @@ class SupabaseAgentService {
 
     if (this.candidates.length > 0) {
       const randomCandidate = this.candidates[Math.floor(Math.random() * this.candidates.length)];
+      const score = Math.random() * 100;
+      const isRecommended = score > 70;
+      
+      const transformedCandidate = this.transformCandidateToUIFormat(randomCandidate, score, isRecommended);
+      
+      // Add to appropriate list
+      if (isRecommended) {
+        this.recommendedCandidates.push(transformedCandidate);
+      } else {
+        this.nonRecommendedCandidates.push(transformedCandidate);
+      }
+      
       return {
-        candidate: randomCandidate,
+        candidate: transformedCandidate,
         job: this.jobs[0] || null,
-        score: Math.random() * 100,
+        score: transformedCandidate.score,
         reasons: ['New application', 'Auto-evaluation completed']
       };
     }
