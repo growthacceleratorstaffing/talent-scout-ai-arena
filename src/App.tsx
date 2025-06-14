@@ -13,6 +13,7 @@ import LinkedIn from "./pages/LinkedIn";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import FloatingAIAgent from "@/components/ai/FloatingAIAgent";
+import SuperAIAgent from "@/components/ai/SuperAIAgent";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <FloatingAIAgent />
+          <SuperAIAgent />
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/" element={
