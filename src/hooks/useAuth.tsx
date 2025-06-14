@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -128,30 +129,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signInWithLinkedIn = async () => {
     try {
-      // Use the exact Supabase redirect URL format for LinkedIn OAuth
-      const redirectUrl = `https://doulsumepjfihqowzheq.supabase.co/auth/v1/callback`;
+      console.log('Starting LinkedIn OAuth flow...');
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
         options: {
-          redirectTo: redirectUrl,
+          redirectTo: `${window.location.origin}/`,
           scopes: 'openid profile email'
         }
       });
 
       if (error) {
+        console.error('LinkedIn OAuth error:', error);
         toast({
           title: "LinkedIn Sign In Error",
           description: error.message,
           variant: "destructive"
         });
+        return { error };
       }
 
-      return { error };
+      console.log('LinkedIn OAuth initiated successfully');
+      return { error: null };
     } catch (error: any) {
+      console.error('LinkedIn OAuth exception:', error);
       toast({
         title: "LinkedIn Sign In Error",
-        description: error.message,
+        description: error.message || 'An unexpected error occurred',
         variant: "destructive"
       });
       return { error };
