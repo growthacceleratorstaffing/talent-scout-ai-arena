@@ -220,4 +220,4 @@ class CandidateEvaluatorAgent {
 
 // Export singleton instances
 export const masterOrchestrator = new MasterOrchestratorAgent();
-export { AgentMessage, JobCreationRequest, CandidateEvaluationRequest, EvaluationResult };
+export type { AgentMessage, JobCreationRequest, CandidateEvaluationRequest, EvaluationResult };
