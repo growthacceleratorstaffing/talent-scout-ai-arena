@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -21,11 +20,15 @@ const Navigation = () => {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-8">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <Sparkles className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-xl font-bold text-gray-900">AI Recruiter</span>
-              <Badge className="bg-blue-100 text-blue-800 text-xs">Beta</Badge>
+              {/* Custom Logo */}
+              <img
+                src="/lovable-uploads/0008ba7e-a588-452c-8c88-bfc190c9e49e.png"
+                alt="Growth Accelerator Logo"
+                className="w-8 h-8 rounded-lg object-contain bg-transparent"
+                style={{ background: 'transparent' }}
+              />
+              <span className="text-xl font-bold text-gray-900">Growth Accelerator</span>
+              {/* Remove Beta badge, or keep if still needed */}
             </div>
             
             <div className="hidden md:flex items-center gap-1">
