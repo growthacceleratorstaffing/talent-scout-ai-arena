@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -79,17 +78,56 @@ serve(async (req) => {
 async function getLinkedInAccessToken() {
   const token = Deno.env.get('LINKEDIN_ACCESS_TOKEN')
   console.log('Access token available:', !!token)
+  if (token) {
+    console.log('Token length:', token.length)
+    console.log('Token prefix:', token.substring(0, 10) + '...')
+  }
   return token
+}
+
+async function validateToken(accessToken: string) {
+  console.log('Validating LinkedIn access token...')
+  
+  try {
+    // Test with the profile endpoint first
+    const profileResponse = await fetch('https://api.linkedin.com/v2/people/~:(id,firstName,lastName)', {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'X-Restli-Protocol-Version': '2.0.0'
+      }
+    })
+
+    console.log('Profile validation response status:', profileResponse.status)
+    
+    if (!profileResponse.ok) {
+      const errorText = await profileResponse.text()
+      console.error('Profile validation failed:', errorText)
+      return { valid: false, error: `Profile API: ${profileResponse.status} - ${errorText}` }
+    }
+
+    const profileData = await profileResponse.json()
+    console.log('Profile validation successful:', profileData.id)
+    
+    return { valid: true, profileId: profileData.id }
+  } catch (error) {
+    console.error('Token validation error:', error)
+    return { valid: false, error: error.message }
+  }
 }
 
 async function makeLinkedInRequest(url: string, accessToken: string, method = 'GET', body?: any) {
   console.log('Making LinkedIn API request to:', url)
+  console.log('Method:', method)
   
   const headers: Record<string, string> = {
     'Authorization': `Bearer ${accessToken}`,
     'Content-Type': 'application/json',
-    'X-Restli-Protocol-Version': '2.0.0'
+    'X-Restli-Protocol-Version': '2.0.0',
+    'LinkedIn-Version': '202409'
   }
+
+  console.log('Request headers:', Object.keys(headers))
 
   const response = await fetch(url, {
     method,
@@ -98,6 +136,7 @@ async function makeLinkedInRequest(url: string, accessToken: string, method = 'G
   })
 
   console.log('LinkedIn API response status:', response.status)
+  console.log('Response headers:', Object.fromEntries(response.headers.entries()))
   
   if (!response.ok) {
     const errorText = await response.text()
@@ -105,56 +144,107 @@ async function makeLinkedInRequest(url: string, accessToken: string, method = 'G
     throw new Error(`LinkedIn API error: ${response.status} - ${errorText}`)
   }
 
-  return await response.json()
+  const responseData = await response.json()
+  console.log('Response data structure:', Object.keys(responseData))
+  
+  return responseData
 }
 
 async function syncAdAccounts(supabaseClient: any, userId: string) {
-  console.log('Syncing LinkedIn ad accounts for user:', userId)
+  console.log('=== Starting LinkedIn ad accounts sync for user:', userId)
   
   const accessToken = await getLinkedInAccessToken()
   if (!accessToken) {
-    throw new Error('LinkedIn access token not found')
+    throw new Error('LinkedIn access token not found in environment variables')
   }
 
   try {
-    // Test API access first with a simple profile call
-    console.log('Testing API access...')
-    const profileData = await makeLinkedInRequest('https://api.linkedin.com/v2/people/~', accessToken)
-    console.log('Profile test successful:', profileData.id)
+    // Validate token first
+    const tokenValidation = await validateToken(accessToken)
+    if (!tokenValidation.valid) {
+      throw new Error(`Token validation failed: ${tokenValidation.error}`)
+    }
 
-    // Fetch ad accounts from LinkedIn API
-    const data = await makeLinkedInRequest('https://api.linkedin.com/v2/adAccountsV2', accessToken)
-    console.log('LinkedIn ad accounts response:', data)
+    console.log('Token validated successfully for profile:', tokenValidation.profileId)
+
+    // Try different ad accounts endpoints
+    const endpoints = [
+      'https://api.linkedin.com/v2/adAccountsV2',
+      'https://api.linkedin.com/rest/adAccounts',
+      'https://api.linkedin.com/v2/adAccounts'
+    ]
+
+    let lastError = null
+    let accountsData = null
+
+    for (const endpoint of endpoints) {
+      try {
+        console.log('Trying endpoint:', endpoint)
+        accountsData = await makeLinkedInRequest(endpoint, accessToken)
+        console.log('Success with endpoint:', endpoint)
+        break
+      } catch (error) {
+        console.log('Failed with endpoint:', endpoint, 'Error:', error.message)
+        lastError = error
+      }
+    }
+
+    if (!accountsData) {
+      throw lastError || new Error('All ad accounts endpoints failed')
+    }
+
+    console.log('Ad accounts data received:', JSON.stringify(accountsData, null, 2))
+
+    // Handle the response structure
+    const accounts = accountsData.elements || accountsData.values || []
+    console.log('Number of ad accounts found:', accounts.length)
 
     // Store ad accounts in database
     let insertedCount = 0
-    for (const account of data.elements || []) {
+    for (const account of accounts) {
+      console.log('Processing account:', account)
+      
+      const accountData = {
+        user_id: userId,
+        linkedin_account_id: String(account.id || account.reference),
+        name: account.name || account.localizedName || 'Unknown Account',
+        type: account.type || 'BUSINESS',
+        status: account.status || 'ENABLED',
+        currency: account.currency || 'USD'
+      }
+
+      console.log('Inserting account data:', accountData)
+
       const { error } = await supabaseClient
         .from('linkedin_ad_accounts')
-        .upsert({
-          user_id: userId,
-          linkedin_account_id: account.id.toString(),
-          name: account.name || 'Unknown Account',
-          type: account.type || 'BUSINESS',
-          status: account.status || 'ENABLED',
-          currency: account.currency || 'USD'
-        })
+        .upsert(accountData)
       
       if (error) {
         console.error('Error storing ad account:', error)
       } else {
         insertedCount++
+        console.log('Successfully stored account:', accountData.linkedin_account_id)
       }
     }
 
+    console.log('=== Ad accounts sync completed. Inserted:', insertedCount, 'Total found:', accounts.length)
+
     return new Response(
-      JSON.stringify({ success: true, count: insertedCount, total: data.elements?.length || 0 }),
+      JSON.stringify({ 
+        success: true, 
+        count: insertedCount, 
+        total: accounts.length,
+        message: `Successfully synced ${insertedCount} ad accounts`
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
-    console.error('Ad accounts sync failed:', error)
+    console.error('=== Ad accounts sync failed:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: `Ad accounts sync failed: ${error.message}`,
+        details: error.stack
+      }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
