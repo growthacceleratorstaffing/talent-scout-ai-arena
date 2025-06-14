@@ -1,3 +1,4 @@
+
 import { supabaseAgentService } from './supabaseAgentService';
 
 interface AgentState {
@@ -29,13 +30,16 @@ class AgentCommunicationService {
       // Load initial evaluations from Supabase data
       await supabaseAgentService.evaluateCandidatesAgainstJobs();
       
+      // Clean up any existing jobs with JSON data
+      const cleanedJobs = this.cleanUpJobAds([]);
+      
       this.setState({
         systemStatus: 'idle',
         evaluationResults: [
           ...supabaseAgentService.getRecommendedCandidates(),
           ...supabaseAgentService.getNonRecommendedCandidates()
         ],
-        activeJobs: supabaseAgentService.getJobAds()
+        activeJobs: cleanedJobs
       });
       
       console.log('[Agent Communication] Initialized with real Supabase data');
@@ -45,6 +49,50 @@ class AgentCommunicationService {
       console.error('[Agent Communication] Error initializing:', error);
       this.setState({ systemStatus: 'error' });
     }
+  }
+
+  private cleanUpJobAds(jobs: any[]) {
+    return jobs.filter(job => {
+      // Remove jobs with JSON-like descriptions or invalid data
+      if (!job.title || !job.company) return false;
+      
+      // Check if description contains JSON-like patterns
+      if (job.description && (
+        job.description.includes('{"') ||
+        job.description.includes('"}') ||
+        job.description.includes('\\n') ||
+        job.description.includes('description:') ||
+        job.description.length < 20
+      )) {
+        console.log('[Agent Communication] Removing job with invalid description:', job.title);
+        return false;
+      }
+      
+      return true;
+    }).map(job => ({
+      ...job,
+      description: this.cleanJobDescription(job.description)
+    }));
+  }
+
+  private cleanJobDescription(description: string) {
+    if (!description) return 'No description available.';
+    
+    // Remove JSON-like formatting and clean up the text
+    let cleaned = description
+      .replace(/[\{\}]/g, '') // Remove curly braces
+      .replace(/["']/g, '') // Remove quotes
+      .replace(/\\n/g, ' ') // Replace \n with spaces
+      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .replace(/^\w+:\s*/, '') // Remove property names like "description:"
+      .trim();
+    
+    // If it's still problematic or too short, provide a fallback
+    if (cleaned.length < 20 || cleaned.includes('undefined') || cleaned.includes('null')) {
+      return 'Professional opportunity with competitive compensation and benefits.';
+    }
+    
+    return cleaned;
   }
 
   subscribeToState(callback: (state: AgentState) => void) {
@@ -62,6 +110,12 @@ class AgentCommunicationService {
 
   private setState(newState: Partial<AgentState>) {
     this.state = { ...this.state, ...newState };
+    
+    // Clean up jobs whenever state is updated
+    if (newState.activeJobs) {
+      this.state.activeJobs = this.cleanUpJobAds(this.state.activeJobs);
+    }
+    
     this.stateSubscribers.forEach(callback => callback(this.state));
   }
 
@@ -81,17 +135,17 @@ class AgentCommunicationService {
         agentId: 'master'
       });
 
-      // Format the result to match the expected structure
+      // Format the result to match the expected structure with clean data
       const formattedJobAd = {
         id: aiResult.jobId,
         title: aiResult.jobAd.title,
         company: aiResult.jobAd.company,
         location: aiResult.jobAd.location,
-        description: aiResult.jobAd.description,
-        requirements: aiResult.jobAd.requirements,
-        benefits: aiResult.jobAd.benefits,
-        salary: aiResult.jobAd.salary,
-        employmentType: aiResult.jobAd.employmentType,
+        description: this.cleanJobDescription(aiResult.jobAd.description),
+        requirements: Array.isArray(aiResult.jobAd.requirements) ? aiResult.jobAd.requirements : [],
+        benefits: aiResult.jobAd.benefits || 'Competitive compensation and benefits package',
+        salary: aiResult.jobAd.salary || 'Competitive salary',
+        employmentType: aiResult.jobAd.employmentType || 'Full-time',
         status: aiResult.status,
         linkedInPostId: aiResult.linkedInPostId,
         createdAt: new Date().toLocaleDateString()
@@ -175,7 +229,11 @@ class AgentCommunicationService {
   async updateJobAd(jobId: string, updates: any) {
     // Updates the job ad with the given id
     const updatedJobs = this.state.activeJobs.map(job =>
-      job.id === jobId ? { ...job, ...updates } : job
+      job.id === jobId ? { 
+        ...job, 
+        ...updates,
+        description: updates.description ? this.cleanJobDescription(updates.description) : job.description
+      } : job
     );
     this.setState({
       activeJobs: updatedJobs
