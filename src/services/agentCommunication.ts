@@ -52,10 +52,25 @@ class AgentCommunicationService {
 
   private cleanUpJobAds(jobs: any[]) {
     return jobs
-      .map(job => ({
-        ...job,
-        description: this.cleanJobDescription(job.description)
-      }))
+      .map(job => {
+        let desc = job.description;
+        // Attempt to parse JSON if description looks like JSON
+        if (desc && typeof desc === "string") {
+          try {
+            if (desc.trim().startsWith("{") && desc.trim().endsWith("}")) {
+              const parsed = JSON.parse(desc);
+              // Prefer 'description' or concatenate stringified object
+              if (parsed.description) desc = parsed.description;
+              else desc = Object.values(parsed).join(" ");
+            }
+          } catch {
+            // ignore if not valid JSON
+          }
+        }
+        // Clean up any badly formatted or object descriptions
+        desc = this.cleanJobDescription(desc);
+        return { ...job, description: desc };
+      })
       .filter(job => {
         // Remove jobs if, after cleaning, the description is empty, 'undefined', or 'null'
         const desc = job.description?.toLowerCase?.() ?? '';
