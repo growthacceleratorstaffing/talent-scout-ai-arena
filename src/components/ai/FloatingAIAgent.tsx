@@ -1,9 +1,8 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Bot, MessageSquare, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAIAgentChat } from "@/hooks/useAIAgentChat";
+import { useAIAgentChat } from "@/hooks/ai/useAIAgentChat";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 

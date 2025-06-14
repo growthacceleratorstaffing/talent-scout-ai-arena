@@ -1,4 +1,5 @@
 import { supabaseAgentService } from './supabaseAgentService';
+import { cleanJobDescription } from '@/utils/cleanJobDescription';
 
 interface AgentState {
   activeJobs: any[];
@@ -54,25 +55,24 @@ class AgentCommunicationService {
     return jobs
       .map(job => {
         let desc = job.description;
-        // Attempt to parse JSON if description looks like JSON
+        // Attempt to parse JSON if the description looks like JSON
         if (desc && typeof desc === "string") {
           try {
             if (desc.trim().startsWith("{") && desc.trim().endsWith("}")) {
               const parsed = JSON.parse(desc);
-              // Prefer 'description' or concatenate stringified object
+              // Prefer 'description' or flatten object
               if (parsed.description) desc = parsed.description;
               else desc = Object.values(parsed).join(" ");
             }
           } catch {
-            // ignore if not valid JSON
+            // ignore
           }
         }
-        // Clean up any badly formatted or object descriptions
-        desc = this.cleanJobDescription(desc);
+        desc = cleanJobDescription(desc);
         return { ...job, description: desc };
       })
       .filter(job => {
-        // Remove jobs if, after cleaning, the description is empty, 'undefined', or 'null'
+        // Remove jobs with empty or junk descriptions
         const desc = job.description?.toLowerCase?.() ?? '';
         if (
           !job.title ||
@@ -89,23 +89,8 @@ class AgentCommunicationService {
   }
 
   private cleanJobDescription(description: string) {
-    if (!description) return 'No description available.';
-    
-    // Remove JSON-like formatting and clean up the text
-    let cleaned = description
-      .replace(/[\{\}]/g, '') // Remove curly braces
-      .replace(/["']/g, '') // Remove quotes
-      .replace(/\\n/g, ' ') // Replace \n with spaces
-      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-      .replace(/^\w+:\s*/, '') // Remove property names like "description:"
-      .trim();
-    
-    // If it's still problematic or too short, provide a fallback
-    if (cleaned.length < 20 || cleaned.includes('undefined') || cleaned.includes('null')) {
-      return 'Professional opportunity with competitive compensation and benefits.';
-    }
-    
-    return cleaned;
+    // DEPRECATED: use utility instead
+    return cleanJobDescription(description);
   }
 
   subscribeToState(callback: (state: AgentState) => void) {
@@ -148,13 +133,13 @@ class AgentCommunicationService {
         agentId: 'master'
       });
 
-      // Format the result to match the expected structure with clean data
+      // When building formattedJobAd:
       const formattedJobAd = {
         id: aiResult.jobId,
         title: aiResult.jobAd.title,
         company: aiResult.jobAd.company,
         location: aiResult.jobAd.location,
-        description: this.cleanJobDescription(aiResult.jobAd.description),
+        description: cleanJobDescription(aiResult.jobAd.description),
         requirements: Array.isArray(aiResult.jobAd.requirements) ? aiResult.jobAd.requirements : [],
         benefits: aiResult.jobAd.benefits || 'Competitive compensation and benefits package',
         salary: aiResult.jobAd.salary || 'Competitive salary',
@@ -242,10 +227,10 @@ class AgentCommunicationService {
   async updateJobAd(jobId: string, updates: any) {
     // Updates the job ad with the given id
     const updatedJobs = this.state.activeJobs.map(job =>
-      job.id === jobId ? { 
-        ...job, 
+      job.id === jobId ? {
+        ...job,
         ...updates,
-        description: updates.description ? this.cleanJobDescription(updates.description) : job.description
+        description: updates.description ? cleanJobDescription(updates.description) : job.description
       } : job
     );
     this.setState({

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 
 // API endpoint for chat (ensure the Azure chat function is deployed at this endpoint or update as needed)

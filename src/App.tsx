@@ -12,7 +12,7 @@ import Profiles from "./pages/Profiles";
 import LinkedIn from "./pages/LinkedIn";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
-import FloatingAIAgent from "@/components/FloatingAIAgent";
+import FloatingAIAgent from "@/components/ai/FloatingAIAgent";
 
 const queryClient = new QueryClient();
 

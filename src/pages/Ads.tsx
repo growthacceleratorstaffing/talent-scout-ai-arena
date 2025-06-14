@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +10,7 @@ import { Sparkles, Plus, Eye, Edit, Trash2, Bot, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAgentState } from "@/hooks/useAgentState";
 import Navigation from "@/components/Navigation";
+import { cleanJobDescription } from '@/utils/cleanJobDescription';
 
 const Ads = () => {
   const { toast } = useToast();
@@ -147,27 +147,6 @@ const Ads = () => {
       case 'archived': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
-  };
-
-  // Function to clean and format job description text
-  const cleanJobDescription = (description: string) => {
-    if (!description) return '';
-    
-    // Remove JSON-like formatting and clean up the text
-    let cleaned = description
-      .replace(/[\{\}]/g, '') // Remove curly braces
-      .replace(/["']/g, '') // Remove quotes
-      .replace(/\\n/g, ' ') // Replace \n with spaces
-      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
-      .replace(/^\w+:\s*/, '') // Remove property names like "description:"
-      .trim();
-    
-    // If it's still too long or looks like code, truncate it
-    if (cleaned.length > 200) {
-      cleaned = cleaned.substring(0, 200) + '...';
-    }
-    
-    return cleaned;
   };
 
   return (
