@@ -7,19 +7,44 @@ import { useAIAgentChat } from "@/hooks/ai/useAIAgentChat";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-/**
- * Floating Super AI Agent Assistant for "Ask Me Anything"
- * Persistent, single instance on every page
- */
+const AUTO_OPEN_KEY = "lovable-super-ai-agent-autopopped";
+const AUTO_POP_DELAY_MS = 3000;
+
 const SuperAIAgent = () => {
   const [open, setOpen] = useState(false);
+  const [autoPopped, setAutoPopped] = useState(false);
   const [input, setInput] = useState("");
   const { messages, sendMessage, loading, error } = useAIAgentChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Scroll to newest message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, open]);
+
+  // Auto-pop after 3 seconds, only once per session/page
+  useEffect(() => {
+    const alreadyPopped = sessionStorage.getItem(AUTO_OPEN_KEY);
+    if (!alreadyPopped) {
+      const timer = setTimeout(() => {
+        setOpen(true);
+        setAutoPopped(true);
+        sessionStorage.setItem(AUTO_OPEN_KEY, "true");
+      }, AUTO_POP_DELAY_MS);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  // Once agent manually opened or closed, clear autoPopped
+  const handleOpen = () => {
+    setOpen(true);
+    setAutoPopped(false);
+    sessionStorage.setItem(AUTO_OPEN_KEY, "true");
+  };
+  const handleClose = () => {
+    setOpen(false);
+    setAutoPopped(false);
+  };
 
   return (
     <>
@@ -27,7 +52,7 @@ const SuperAIAgent = () => {
         <button
           aria-label="Open Super AI Assistant"
           className="fixed bottom-6 left-6 bg-gradient-to-r from-emerald-200 to-blue-100 text-blue-800 rounded-full shadow-lg p-3 z-50 hover:bg-blue-200 transition"
-          onClick={() => setOpen(true)}
+          onClick={handleOpen}
         >
           <HelpCircle className="w-6 h-6" />
         </button>
@@ -40,10 +65,10 @@ const SuperAIAgent = () => {
           <div
             className="fixed inset-0 bg-black/20"
             style={{ pointerEvents: "auto" }}
-            onClick={() => setOpen(false)}
+            onClick={handleClose}
           />
           <Card
-            className="relative w-full sm:w-[350px] max-h-[70vh] flex flex-col shadow-2xl bg-white left-0 right-0 bottom-0 mb-6 ml-6"
+            className="relative w-full sm:w-[350px] max-h-[70vh] flex flex-col shadow-2xl bg-white left-0 right-0 bottom-0 mb-6 ml-6 animate-scale-in"
             style={{
               pointerEvents: "auto",
               transition: "transform 0.2s",
@@ -56,7 +81,7 @@ const SuperAIAgent = () => {
               </div>
               <button
                 aria-label="Close Super AI Assistant"
-                onClick={() => setOpen(false)}
+                onClick={handleClose}
                 className="p-1 hover:bg-gray-100 rounded"
               >
                 <X className="w-4 h-4" />
@@ -98,10 +123,11 @@ const SuperAIAgent = () => {
                 if (!input.trim() || loading) return;
                 await sendMessage(input);
                 setInput("");
+                setAutoPopped(false);
               }}
             >
               <Input
-                placeholder="Type any question..."
+                placeholder={autoPopped ? "Ask me anything..." : "Type any question..."}
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 disabled={loading}
@@ -131,4 +157,3 @@ const SuperAIAgent = () => {
 };
 
 export default SuperAIAgent;
-
