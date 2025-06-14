@@ -263,6 +263,170 @@ export type Database = {
           },
         ]
       }
+      linkedin_ad_accounts: {
+        Row: {
+          created_at: string
+          currency: string | null
+          id: string
+          linkedin_account_id: string
+          name: string
+          status: string | null
+          type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string | null
+          id?: string
+          linkedin_account_id: string
+          name: string
+          status?: string | null
+          type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string | null
+          id?: string
+          linkedin_account_id?: string
+          name?: string
+          status?: string | null
+          type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      linkedin_campaigns: {
+        Row: {
+          budget_amount: number | null
+          budget_currency: string | null
+          campaign_type: string | null
+          clicks: number | null
+          conversions: number | null
+          created_at: string
+          end_date: string | null
+          id: string
+          impressions: number | null
+          last_synced_at: string | null
+          linkedin_campaign_id: string
+          name: string
+          objective_type: string | null
+          spend: number | null
+          start_date: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          budget_amount?: number | null
+          budget_currency?: string | null
+          campaign_type?: string | null
+          clicks?: number | null
+          conversions?: number | null
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          impressions?: number | null
+          last_synced_at?: string | null
+          linkedin_campaign_id: string
+          name: string
+          objective_type?: string | null
+          spend?: number | null
+          start_date?: string | null
+          status: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          budget_amount?: number | null
+          budget_currency?: string | null
+          campaign_type?: string | null
+          clicks?: number | null
+          conversions?: number | null
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          impressions?: number | null
+          last_synced_at?: string | null
+          linkedin_campaign_id?: string
+          name?: string
+          objective_type?: string | null
+          spend?: number | null
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      linkedin_leads: {
+        Row: {
+          campaign_id: string | null
+          company: string | null
+          created_at: string
+          email: string | null
+          first_name: string | null
+          form_name: string | null
+          id: string
+          job_title: string | null
+          last_name: string | null
+          lead_data: Json | null
+          linkedin_campaign_id: string | null
+          linkedin_lead_id: string
+          phone: string | null
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          campaign_id?: string | null
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          form_name?: string | null
+          id?: string
+          job_title?: string | null
+          last_name?: string | null
+          lead_data?: Json | null
+          linkedin_campaign_id?: string | null
+          linkedin_lead_id: string
+          phone?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string | null
+          company?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          form_name?: string | null
+          id?: string
+          job_title?: string | null
+          last_name?: string | null
+          lead_data?: Json | null
+          linkedin_campaign_id?: string | null
+          linkedin_lead_id?: string
+          phone?: string | null
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "linkedin_leads_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "linkedin_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string | null

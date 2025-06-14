@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Ads from "./pages/Ads";
 import TalentPool from "./pages/TalentPool";
 import Profiles from "./pages/Profiles";
+import LinkedIn from "./pages/LinkedIn";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -42,6 +43,11 @@ const App = () => (
             <Route path="/profiles" element={
               <ProtectedRoute>
                 <Profiles />
+              </ProtectedRoute>
+            } />
+            <Route path="/linkedin" element={
+              <ProtectedRoute>
+                <LinkedIn />
               </ProtectedRoute>
             } />
             <Route path="*" element={<NotFound />} />
