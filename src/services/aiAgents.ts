@@ -1,4 +1,4 @@
-import { AgentMessage } from '@/types/agent';
+import { AgentMessage } from '../types/agent';
 
 export const masterOrchestrator = {
   async processMessage(message: AgentMessage): Promise<any> {
