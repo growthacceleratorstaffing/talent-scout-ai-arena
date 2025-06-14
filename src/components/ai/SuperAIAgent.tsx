@@ -68,15 +68,15 @@ const SuperAIAgent = () => {
             onClick={handleClose}
           />
           <Card
-            className="relative w-full sm:w-[350px] max-h-[70vh] flex flex-col shadow-2xl bg-white left-0 right-0 bottom-0 mb-6 ml-6 animate-scale-in"
+            className="relative w-full sm:w-[350px] max-h-[70vh] flex flex-col shadow-2xl bg-blue-50 left-0 right-0 bottom-0 mb-6 ml-6 animate-scale-in"
             style={{
               pointerEvents: "auto",
               transition: "transform 0.2s",
             }}
           >
-            <div className="flex items-center justify-between px-4 py-2 border-b">
+            <div className="flex items-center justify-between px-4 py-2 border-b bg-gradient-to-r from-emerald-200 to-blue-100">
               <div className="flex items-center gap-2">
-                <HelpCircle className="w-5 h-5 text-green-600" />
+                <HelpCircle className="w-5 h-5 text-blue-800" />
                 <span className="font-semibold text-gray-900">Super AI: Ask Me Anything</span>
               </div>
               <button
