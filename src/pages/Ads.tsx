@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Sparkles, Plus, Eye, Edit, Trash2, Bot, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAgentState } from "@/hooks/useAgentState";
@@ -14,6 +16,17 @@ const Ads = () => {
   const { toast } = useToast();
   const { activeJobs, systemStatus, createJobAd, simulateCandidateApplication } = useAgentState();
   const [isCreating, setIsCreating] = useState(false);
+  const [selectedJob, setSelectedJob] = useState<any>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editJobData, setEditJobData] = useState({
+    title: '',
+    company: '',
+    location: '',
+    description: '',
+    requirements: '',
+    salary: ''
+  });
   const [jobDetails, setJobDetails] = useState({
     role: '',
     company: '',
@@ -61,6 +74,42 @@ const Ads = () => {
     } finally {
       setIsCreating(false);
     }
+  };
+
+  const handleViewJob = (job: any) => {
+    setSelectedJob(job);
+    setIsViewDialogOpen(true);
+  };
+
+  const handleEditJob = (job: any) => {
+    setSelectedJob(job);
+    setEditJobData({
+      title: job.title || '',
+      company: job.company || '',
+      location: job.location || '',
+      description: job.description || '',
+      requirements: Array.isArray(job.requirements) ? job.requirements.join(', ') : '',
+      salary: job.salary || ''
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    // In a real implementation, this would update the job in the database
+    toast({
+      title: "Job Updated",
+      description: "The job advertisement has been updated successfully.",
+    });
+    setIsEditDialogOpen(false);
+  };
+
+  const handleDeleteJob = (jobId: string, jobTitle: string) => {
+    // In a real implementation, this would delete the job from the database
+    toast({
+      title: "Job Deleted",
+      description: `"${jobTitle}" has been deleted successfully.`,
+      variant: "destructive"
+    });
   };
 
   const getStatusColor = (status: string) => {
@@ -279,15 +328,46 @@ const Ads = () => {
                           <div className="flex justify-between items-center pt-2 border-t">
                             <span className="text-xs text-gray-500">Created: {ad.createdAt}</span>
                             <div className="flex gap-2">
-                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-8 w-8 p-0"
+                                onClick={() => handleViewJob(ad)}
+                              >
                                 <Eye className="h-4 w-4" />
                               </Button>
-                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                className="h-8 w-8 p-0"
+                                onClick={() => handleEditJob(ad)}
+                              >
                                 <Edit className="h-4 w-4" />
                               </Button>
-                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-600">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-600">
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Job Advertisement</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to delete "{ad.title}"? This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction 
+                                      onClick={() => handleDeleteJob(ad.id, ad.title)}
+                                      className="bg-red-600 hover:bg-red-700"
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </div>
                           </div>
                         </div>
@@ -298,6 +378,109 @@ const Ads = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* View Job Dialog */}
+          <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{selectedJob?.title}</DialogTitle>
+                <DialogDescription>{selectedJob?.company} • {selectedJob?.location}</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-semibold mb-2">Job Description</h4>
+                  <p className="text-sm text-gray-600">{selectedJob?.description}</p>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Requirements</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedJob?.requirements?.map((req: string, index: number) => (
+                      <Badge key={index} variant="secondary">{req}</Badge>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-semibold mb-2">Benefits</h4>
+                  <p className="text-sm text-gray-600">{selectedJob?.benefits}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-semibold mb-1">Salary</h4>
+                    <p className="text-sm">{selectedJob?.salary}</p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-1">Employment Type</h4>
+                    <p className="text-sm">{selectedJob?.employmentType}</p>
+                  </div>
+                </div>
+                {selectedJob?.linkedInPostId && (
+                  <div>
+                    <h4 className="font-semibold mb-1">LinkedIn Post ID</h4>
+                    <p className="text-sm font-mono bg-gray-100 p-2 rounded">{selectedJob.linkedInPostId}</p>
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Edit Job Dialog */}
+          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+            <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Edit Job Advertisement</DialogTitle>
+                <DialogDescription>Update the job advertisement details</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Job Title</label>
+                  <Input
+                    value={editJobData.title}
+                    onChange={(e) => setEditJobData(prev => ({ ...prev, title: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Company</label>
+                  <Input
+                    value={editJobData.company}
+                    onChange={(e) => setEditJobData(prev => ({ ...prev, company: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Location</label>
+                  <Input
+                    value={editJobData.location}
+                    onChange={(e) => setEditJobData(prev => ({ ...prev, location: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Description</label>
+                  <Textarea
+                    value={editJobData.description}
+                    onChange={(e) => setEditJobData(prev => ({ ...prev, description: e.target.value }))}
+                    rows={4}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Requirements (comma-separated)</label>
+                  <Input
+                    value={editJobData.requirements}
+                    onChange={(e) => setEditJobData(prev => ({ ...prev, requirements: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Salary</label>
+                  <Input
+                    value={editJobData.salary}
+                    onChange={(e) => setEditJobData(prev => ({ ...prev, salary: e.target.value }))}
+                  />
+                </div>
+                <div className="flex gap-2 pt-4">
+                  <Button onClick={handleSaveEdit} className="flex-1">Save Changes</Button>
+                  <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>
