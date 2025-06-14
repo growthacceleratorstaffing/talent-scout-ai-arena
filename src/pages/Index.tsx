@@ -65,7 +65,7 @@ const Index = () => {
           <div className="text-center mb-8">
             <h1 className="text-5xl font-bold text-gray-900 mb-4">
               AI-Powered Recruitment
-              <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
                 {" "}Dashboard
               </span>
             </h1>
@@ -76,6 +76,7 @@ const Index = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            {/* Blue (Job Ads) */}
             <Card className="shadow-lg border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
@@ -88,7 +89,8 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <Card className="shadow-lg border-0 bg-gradient-to-br from-green-500 to-green-600 text-white">
+            {/* Green/Emerald (Talent Pool) */}
+            <Card className="shadow-lg border-0 bg-gradient-to-br from-green-500 to-emerald-600 text-white">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -100,14 +102,15 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            <Card className="shadow-lg border-0 bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+            {/* Orange/Red (Profiles) */}
+            <Card className="shadow-lg border-0 bg-gradient-to-br from-orange-500 to-red-600 text-white">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-3xl font-bold">{stats.avgMatchScore}%</div>
-                    <div className="text-purple-100">Avg Match Score</div>
+                    <div className="text-orange-100">Avg Match Score</div>
                   </div>
-                  <Target className="h-12 w-12 text-purple-200" />
+                  <Target className="h-12 w-12 text-orange-200" />
                 </div>
               </CardContent>
             </Card>
@@ -128,7 +131,7 @@ const Index = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Link to="/ads">
-                <Button className="w-full h-16 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-left justify-start">
+                <Button className="w-full h-16 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-left justify-start">
                   <div className="flex items-center gap-3">
                     <Sparkles className="h-6 w-6" />
                     <div>
@@ -203,7 +206,7 @@ const Index = () => {
                 
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">LinkedIn Integration</span>
-                  <Badge className="bg-yellow-100 text-yellow-800">Pending Auth</Badge>
+                  <Badge className="bg-orange-100 text-orange-800">Pending Auth</Badge>
                 </div>
                 <Progress value={0} className="h-2" />
               </div>
@@ -225,7 +228,7 @@ const Index = () => {
           <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Clock className="h-6 w-6 text-purple-500" />
+                <Clock className="h-6 w-6 text-orange-600" />
                 Recent Activity
               </CardTitle>
               <CardDescription>
@@ -238,7 +241,7 @@ const Index = () => {
                   <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
                     <div className={`w-2 h-2 rounded-full mt-2 ${
                       activity.status === 'recommended' ? 'bg-green-500' :
-                      activity.status === 'published' ? 'bg-blue-500' : 'bg-gray-400'
+                      activity.status === 'published' ? 'bg-blue-500' : 'bg-orange-400'
                     }`} />
                     <div className="flex-1">
                       <p className="text-sm font-medium">{activity.title}</p>
@@ -264,3 +267,4 @@ const Index = () => {
 };
 
 export default Index;
+
