@@ -65,18 +65,45 @@ class AgentCommunicationService {
   }
 
   async createJobAd(jobData: any) {
-    console.log('[Agent Communication] Creating job ad with Supabase integration');
+    console.log('[Agent Communication] Creating job ad with AI agents');
     this.setState({ systemStatus: 'processing' });
     
     try {
-      const result = await supabaseAgentService.createJobAdFromDatabase(jobData);
+      // Create job ad using AI agents (this calls Azure AI)
+      const { masterOrchestrator } = await import('./aiAgents');
       
+      const aiResult = await masterOrchestrator.processMessage({
+        id: Date.now().toString(),
+        type: 'job_creation',
+        payload: jobData,
+        timestamp: new Date().toISOString(),
+        agentId: 'master'
+      });
+
+      // Format the result to match the expected structure
+      const formattedJobAd = {
+        id: aiResult.jobId,
+        title: aiResult.jobAd.title,
+        company: aiResult.jobAd.company,
+        location: aiResult.jobAd.location,
+        description: aiResult.jobAd.description,
+        requirements: aiResult.jobAd.requirements,
+        benefits: aiResult.jobAd.benefits,
+        salary: aiResult.jobAd.salary,
+        employmentType: aiResult.jobAd.employmentType,
+        status: aiResult.status,
+        linkedInPostId: aiResult.linkedInPostId,
+        createdAt: new Date().toLocaleDateString()
+      };
+
+      // Add to active jobs state
       this.setState({
-        activeJobs: [...this.state.activeJobs, result],
+        activeJobs: [...this.state.activeJobs, formattedJobAd],
         systemStatus: 'idle'
       });
       
-      return result;
+      console.log('[Agent Communication] Job ad created and added to active jobs:', formattedJobAd.title);
+      return formattedJobAd;
     } catch (error) {
       console.error('[Agent Communication] Error creating job ad:', error);
       this.setState({ systemStatus: 'error' });
