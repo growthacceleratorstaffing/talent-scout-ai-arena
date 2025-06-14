@@ -52,7 +52,7 @@ const Ads = () => {
 
       toast({
         title: "Job Advertisement Created!",
-        description: `AI agents successfully generated and published your job ad. LinkedIn Post ID: ${result.linkedInPostId}`,
+        description: `Successfully generated and published your job ad for ${result.title}`,
       });
 
       // Simulate candidate applications after 3 seconds
@@ -297,8 +297,12 @@ const Ads = () => {
                             {ad.status}
                           </Badge>
                         </div>
-                        <CardDescription className="text-sm line-clamp-3">
-                          {ad.description}
+                        <CardDescription className="text-sm">
+                          <div className="space-y-1">
+                            <p className="font-medium">{ad.company}</p>
+                            <p className="text-gray-600">{ad.location}</p>
+                            <p className="line-clamp-2">{ad.description}</p>
+                          </div>
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="pt-0">
@@ -317,7 +321,7 @@ const Ads = () => {
                             </div>
                           </div>
                           <div className="flex justify-between text-sm text-gray-600">
-                            <span>{ad.location}</span>
+                            <span>{ad.employmentType || 'Full-time'}</span>
                             <span>{ad.salary}</span>
                           </div>
                           {ad.linkedInPostId && (
