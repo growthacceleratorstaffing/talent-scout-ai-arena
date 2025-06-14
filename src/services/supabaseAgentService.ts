@@ -12,7 +12,6 @@ export interface SupabaseCandidate {
   linkedin_profile_url: string | null;
   location: string | null;
   phone: string | null;
-  summary: string | null;
   education: any;
   workable_candidate_id: string | null;
   linkedin_id: string | null;
@@ -21,23 +20,21 @@ export interface SupabaseCandidate {
   updated_at: string;
 }
 
-export interface SupabaseJob {
+export interface SupabaseCrawledJob {
   id: string;
   title: string;
-  department: string | null;
+  company: string;
   location: string | null;
-  employment_type: string | null;
-  experience_level: string | null;
-  salary_min: number | null;
-  salary_max: number | null;
+  job_type: string | null;
   description: string | null;
-  requirements: any[];
-  benefits: any[];
-  workable_job_id: string | null;
+  salary: string | null;
+  url: string;
+  source: string;
+  posted_date: string | null;
+  crawled_at: string;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
-  published_at: string | null;
-  expires_at: string | null;
 }
 
 export const getCandidatesFromSupabase = async (): Promise<SupabaseCandidate[]> => {
@@ -52,15 +49,14 @@ export const getCandidatesFromSupabase = async (): Promise<SupabaseCandidate[]> 
       return [];
     }
 
-    // Transform the data to ensure skills is always an array and add missing fields
+    // Transform the data to ensure skills is always an array
     const transformedData = data.map(candidate => ({
       ...candidate,
       skills: Array.isArray(candidate.skills) 
         ? candidate.skills 
         : candidate.skills 
           ? JSON.parse(candidate.skills as string) 
-          : [],
-      summary: candidate.summary || null // Add default summary if missing
+          : []
     }));
 
     return transformedData;
@@ -70,8 +66,7 @@ export const getCandidatesFromSupabase = async (): Promise<SupabaseCandidate[]> 
   }
 };
 
-// Since there's no jobs table in the current schema, let's use crawled_jobs instead
-export const getJobsFromSupabase = async (): Promise<any[]> => {
+export const getJobsFromSupabase = async (): Promise<SupabaseCrawledJob[]> => {
   try {
     const { data, error } = await supabase
       .from('crawled_jobs')
@@ -103,15 +98,14 @@ export const getCandidateById = async (id: string): Promise<SupabaseCandidate | 
       return null;
     }
 
-    // Transform the data to ensure skills is always an array and add missing fields
+    // Transform the data to ensure skills is always an array
     const transformedData = {
       ...data,
       skills: Array.isArray(data.skills) 
         ? data.skills 
         : data.skills 
           ? JSON.parse(data.skills as string) 
-          : [],
-      summary: data.summary || null // Add default summary if missing
+          : []
     };
 
     return transformedData;
@@ -121,7 +115,7 @@ export const getCandidateById = async (id: string): Promise<SupabaseCandidate | 
   }
 };
 
-export const getJobById = async (id: string): Promise<any | null> => {
+export const getJobById = async (id: string): Promise<SupabaseCrawledJob | null> => {
   try {
     const { data, error } = await supabase
       .from('crawled_jobs')
@@ -144,7 +138,7 @@ export const getJobById = async (id: string): Promise<any | null> => {
 // Mock implementation for AI agent functionality
 class SupabaseAgentService {
   private candidates: SupabaseCandidate[] = [];
-  private jobs: any[] = [];
+  private jobs: SupabaseCrawledJob[] = [];
   private recommendedCandidates: any[] = [];
   private nonRecommendedCandidates: any[] = [];
 

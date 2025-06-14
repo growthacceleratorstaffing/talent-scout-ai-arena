@@ -128,7 +128,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signInWithLinkedIn = async () => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      // Use the exact Supabase redirect URL format for LinkedIn OAuth
+      const redirectUrl = `https://doulsumepjfihqowzheq.supabase.co/auth/v1/callback`;
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
