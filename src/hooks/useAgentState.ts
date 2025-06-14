@@ -35,6 +35,8 @@ export const useAgentState = () => {
     nonRecommendedCandidates: agentCommunicationService.getNonRecommendedCandidates(),
     createJobAd: agentCommunicationService.createJobAd.bind(agentCommunicationService),
     evaluateCandidate: agentCommunicationService.evaluateCandidate.bind(agentCommunicationService),
-    simulateCandidateApplication: agentCommunicationService.simulateCandidateApplication.bind(agentCommunicationService)
+    simulateCandidateApplication: agentCommunicationService.simulateCandidateApplication.bind(agentCommunicationService),
+    deleteJobAd: agentCommunicationService.deleteJobAd.bind(agentCommunicationService),
+    updateJobAd: agentCommunicationService.updateJobAd.bind(agentCommunicationService),
   };
 };

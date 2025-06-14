@@ -1,4 +1,3 @@
-
 import { supabaseAgentService } from './supabaseAgentService';
 
 interface AgentState {
@@ -161,6 +160,28 @@ class AgentCommunicationService {
 
   getNonRecommendedCandidates() {
     return supabaseAgentService.getNonRecommendedCandidates();
+  }
+
+  async deleteJobAd(jobId: string) {
+    // Removes the job ad from state by id
+    const filteredJobs = this.state.activeJobs.filter((job) => job.id !== jobId);
+    this.setState({
+      activeJobs: filteredJobs
+    });
+    // You could also remove from Supabase here if needed
+    return true;
+  }
+
+  async updateJobAd(jobId: string, updates: any) {
+    // Updates the job ad with the given id
+    const updatedJobs = this.state.activeJobs.map(job =>
+      job.id === jobId ? { ...job, ...updates } : job
+    );
+    this.setState({
+      activeJobs: updatedJobs
+    });
+    // You could also update Supabase here if needed
+    return updatedJobs.find(job => job.id === jobId);
   }
 }
 
