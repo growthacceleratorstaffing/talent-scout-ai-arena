@@ -56,7 +56,8 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    // Use the blue dashboard background like Job Ads page
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
       <Navigation />
       
       <div className="max-w-7xl mx-auto p-6">
@@ -77,40 +78,40 @@ const Index = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             {/* Blue (Job Ads) */}
-            <Card className="shadow-lg border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+            <Card className="shadow-lg border-0 bg-gradient-to-br from-blue-50 to-blue-100 text-blue-900">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-3xl font-bold">{stats.totalApplications}</div>
-                    <div className="text-blue-100">Total Applications</div>
+                    <div className="text-blue-700">Total Applications</div>
                   </div>
-                  <Users className="h-12 w-12 text-blue-200" />
+                  <Users className="h-12 w-12 text-blue-300" />
                 </div>
               </CardContent>
             </Card>
 
             {/* Green/Emerald (Talent Pool) */}
-            <Card className="shadow-lg border-0 bg-gradient-to-br from-green-500 to-emerald-600 text-white">
+            <Card className="shadow-lg border-0 bg-gradient-to-br from-green-50 to-emerald-100 text-emerald-900">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-3xl font-bold">{stats.recommended}</div>
-                    <div className="text-green-100">AI Recommended</div>
+                    <div className="text-emerald-700">AI Recommended</div>
                   </div>
-                  <UserCheck className="h-12 w-12 text-green-200" />
+                  <UserCheck className="h-12 w-12 text-emerald-300" />
                 </div>
               </CardContent>
             </Card>
 
             {/* Orange/Red (Profiles) */}
-            <Card className="shadow-lg border-0 bg-gradient-to-br from-orange-500 to-red-600 text-white">
+            <Card className="shadow-lg border-0 bg-gradient-to-br from-red-50 to-orange-100 text-orange-900">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-3xl font-bold">{stats.avgMatchScore}%</div>
-                    <div className="text-orange-100">Avg Match Score</div>
+                    <div className="text-orange-700">Avg Match Score</div>
                   </div>
-                  <Target className="h-12 w-12 text-orange-200" />
+                  <Target className="h-12 w-12 text-orange-300" />
                 </div>
               </CardContent>
             </Card>
@@ -118,7 +119,7 @@ const Index = () => {
         </div>
 
         {/* Quick Actions */}
-        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm mb-8">
+        <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm mb-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Zap className="h-6 w-6 text-yellow-500" />
@@ -131,7 +132,7 @@ const Index = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Link to="/ads">
-                <Button className="w-full h-16 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-left justify-start">
+                <Button className="w-full h-16 bg-gradient-to-r from-blue-100 to-blue-200 hover:from-blue-200 hover:to-blue-300 text-left justify-start text-blue-900 font-semibold">
                   <div className="flex items-center gap-3">
                     <Sparkles className="h-6 w-6" />
                     <div>
@@ -144,7 +145,7 @@ const Index = () => {
               </Link>
 
               <Link to="/talent-pool">
-                <Button className="w-full h-16 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-left justify-start">
+                <Button className="w-full h-16 bg-gradient-to-r from-green-100 to-emerald-100 hover:from-green-200 hover:to-emerald-200 text-left justify-start text-emerald-900 font-semibold">
                   <div className="flex items-center gap-3">
                     <Users className="h-6 w-6" />
                     <div>
@@ -157,7 +158,7 @@ const Index = () => {
               </Link>
 
               <Link to="/profiles">
-                <Button className="w-full h-16 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-left justify-start">
+                <Button className="w-full h-16 bg-gradient-to-r from-red-100 to-orange-100 hover:from-red-200 hover:to-orange-200 text-left justify-start text-orange-900 font-semibold">
                   <div className="flex items-center gap-3">
                     <UserX className="h-6 w-6" />
                     <div>
@@ -174,7 +175,7 @@ const Index = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* AI System Status */}
-          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+          <Card className="shadow-lg border-0 bg-gradient-to-br from-blue-50 to-blue-100 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Brain className="h-6 w-6 text-blue-500" />
@@ -225,7 +226,7 @@ const Index = () => {
           </Card>
 
           {/* Recent Activity */}
-          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+          <Card className="shadow-lg border-0 bg-gradient-to-br from-red-50 to-orange-100 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-6 w-6 text-orange-600" />
@@ -238,7 +239,7 @@ const Index = () => {
             <CardContent>
               <div className="space-y-4">
                 {recentActivity.map((activity, index) => (
-                  <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                  <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-white/40 hover:bg-white/70 transition-colors">
                     <div className={`w-2 h-2 rounded-full mt-2 ${
                       activity.status === 'recommended' ? 'bg-green-500' :
                       activity.status === 'published' ? 'bg-blue-500' : 'bg-orange-400'
