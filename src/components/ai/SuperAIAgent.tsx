@@ -51,15 +51,16 @@ const SuperAIAgent = () => {
       {!open && (
         <button
           aria-label="Open Super AI Assistant"
-          className="fixed bottom-6 left-6 bg-gradient-to-r from-emerald-200 to-blue-100 text-blue-800 rounded-full shadow-lg p-3 z-50 hover:bg-blue-200 transition"
+          className="fixed bottom-6 right-6 bg-gradient-to-r from-emerald-200 to-blue-100 text-blue-800 rounded-full shadow-lg p-3 z-50 hover:bg-blue-200 transition flex items-center justify-center"
           onClick={handleOpen}
+          style={{ boxShadow: "0 4px 32px 0 rgb(38 97 247 / 14%)" }}
         >
-          <HelpCircle className="w-6 h-6" />
+          <HelpCircle className="w-6 h-6 text-blue-700" />
         </button>
       )}
       {open && (
         <div
-          className="fixed inset-0 flex items-end justify-start z-50"
+          className="fixed inset-0 flex items-end justify-end z-50"
           style={{ pointerEvents: "none" }}
         >
           <div
@@ -68,7 +69,7 @@ const SuperAIAgent = () => {
             onClick={handleClose}
           />
           <Card
-            className="relative w-full sm:w-[350px] max-h-[70vh] flex flex-col shadow-2xl bg-blue-50 left-0 right-0 bottom-0 mb-6 ml-6 animate-scale-in"
+            className="relative w-full sm:w-[350px] max-h-[70vh] flex flex-col shadow-2xl bg-blue-50 right-0 bottom-0 mb-6 mr-6 animate-scale-in"
             style={{
               pointerEvents: "auto",
               transition: "transform 0.2s",
