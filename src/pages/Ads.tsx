@@ -1,25 +1,18 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Plus, Eye, Edit, Trash2 } from "lucide-react";
+import { Sparkles, Plus, Eye, Edit, Trash2, Bot, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-interface JobAd {
-  id: string;
-  title: string;
-  description: string;
-  requirements: string[];
-  location: string;
-  salary: string;
-  createdAt: string;
-  status: 'draft' | 'published' | 'archived';
-}
+import { useAgentState } from "@/hooks/useAgentState";
+import Navigation from "@/components/Navigation";
 
 const Ads = () => {
   const { toast } = useToast();
+  const { activeJobs, systemStatus, createJobAd, simulateCandidateApplication } = useAgentState();
   const [isCreating, setIsCreating] = useState(false);
   const [jobDetails, setJobDetails] = useState({
     role: '',
@@ -29,55 +22,45 @@ const Ads = () => {
     additional: ''
   });
 
-  const [jobAds, setJobAds] = useState<JobAd[]>([
-    {
-      id: '1',
-      title: 'Senior Full Stack Developer',
-      description: 'We are seeking a talented Senior Full Stack Developer to join our dynamic team...',
-      requirements: ['React', 'Node.js', '5+ years experience', 'TypeScript'],
-      location: 'Amsterdam, Netherlands',
-      salary: '€70,000 - €90,000',
-      createdAt: '2024-06-10',
-      status: 'published'
-    },
-    {
-      id: '2',
-      title: 'UX/UI Designer',
-      description: 'Join our design team to create beautiful and intuitive user experiences...',
-      requirements: ['Figma', 'Adobe Creative Suite', '3+ years experience', 'Portfolio'],
-      location: 'Remote',
-      salary: '€55,000 - €75,000',
-      createdAt: '2024-06-08',
-      status: 'draft'
-    }
-  ]);
-
   const handleCreateAd = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsCreating(true);
 
-    // Simulate AI job ad creation
-    setTimeout(() => {
-      const newAd: JobAd = {
-        id: Date.now().toString(),
-        title: jobDetails.role,
-        description: `We are looking for an exceptional ${jobDetails.role} to join ${jobDetails.company}. This role offers exciting opportunities to work with cutting-edge technologies and contribute to meaningful projects.`,
-        requirements: jobDetails.requirements.split(',').map(req => req.trim()),
+    try {
+      const result = await createJobAd({
+        role: jobDetails.role,
+        company: jobDetails.company,
         location: jobDetails.location,
-        salary: 'Competitive',
-        createdAt: new Date().toISOString().split('T')[0],
-        status: 'draft'
-      };
+        requirements: jobDetails.requirements.split(',').map(req => req.trim()),
+        additionalInfo: jobDetails.additional
+      });
 
-      setJobAds(prev => [newAd, ...prev]);
       setJobDetails({ role: '', company: '', location: '', requirements: '', additional: '' });
-      setIsCreating(false);
 
       toast({
         title: "Job Advertisement Created!",
-        description: "AI has successfully generated your job advertisement.",
+        description: `AI agents successfully generated and published your job ad. LinkedIn Post ID: ${result.linkedInPostId}`,
       });
-    }, 2000);
+
+      // Simulate candidate applications after 3 seconds
+      setTimeout(() => {
+        simulateCandidateApplication(result.jobId);
+        toast({
+          title: "Candidates Applying!",
+          description: "AI is now evaluating incoming applications for your job posting.",
+        });
+      }, 3000);
+
+    } catch (error) {
+      console.error('Error creating job ad:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create job advertisement. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCreating(false);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -90,184 +73,232 @@ const Ads = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">AI Job Advertisement Creator</h1>
-          <p className="text-lg text-gray-600">Create compelling job advertisements with AI assistance</p>
-        </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <Navigation />
+      <div className="p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">AI Job Advertisement Creator</h1>
+            <p className="text-lg text-gray-600">Create compelling job advertisements with Azure AI Foundry agents</p>
+            
+            {/* System Status Indicator */}
+            <div className="mt-4 flex items-center gap-2">
+              <Bot className="h-5 w-5 text-blue-600" />
+              <span className="text-sm font-medium">Agent Status:</span>
+              <Badge className={systemStatus === 'processing' ? 'bg-blue-100 text-blue-800' : 
+                              systemStatus === 'error' ? 'bg-red-100 text-red-800' : 
+                              'bg-green-100 text-green-800'}>
+                {systemStatus === 'processing' && <Sparkles className="animate-spin h-3 w-3 mr-1" />}
+                {systemStatus.charAt(0).toUpperCase() + systemStatus.slice(1)}
+              </Badge>
+            </div>
+          </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          {/* AI Job Creator */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            {/* AI Job Creator */}
+            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <Sparkles className="h-6 w-6 text-purple-600" />
+                  AI Job Advertisement Generator
+                </CardTitle>
+                <CardDescription>
+                  Powered by Azure AI Foundry agents for intelligent job ad creation
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleCreateAd} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Job Role</label>
+                    <Input
+                      placeholder="e.g., Senior Software Engineer"
+                      value={jobDetails.role}
+                      onChange={(e) => setJobDetails(prev => ({ ...prev, role: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Company Name</label>
+                    <Input
+                      placeholder="e.g., TechCorp Inc."
+                      value={jobDetails.company}
+                      onChange={(e) => setJobDetails(prev => ({ ...prev, company: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Location</label>
+                    <Input
+                      placeholder="e.g., Amsterdam, Netherlands"
+                      value={jobDetails.location}
+                      onChange={(e) => setJobDetails(prev => ({ ...prev, location: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Key Requirements (comma-separated)</label>
+                    <Input
+                      placeholder="e.g., React, TypeScript, 5+ years experience"
+                      value={jobDetails.requirements}
+                      onChange={(e) => setJobDetails(prev => ({ ...prev, requirements: e.target.value }))}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Additional Information</label>
+                    <Textarea
+                      placeholder="Any specific details about the role, company culture, benefits..."
+                      value={jobDetails.additional}
+                      onChange={(e) => setJobDetails(prev => ({ ...prev, additional: e.target.value }))}
+                      rows={3}
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    disabled={isCreating || systemStatus === 'processing'}
+                    className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                  >
+                    {isCreating ? (
+                      <>
+                        <Sparkles className="animate-spin h-4 w-4 mr-2" />
+                        AI agents are creating your job ad...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-4 w-4 mr-2" />
+                        Generate with AI Agents
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Agent Architecture Status */}
+            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl">
+                  <Zap className="h-6 w-6 text-orange-600" />
+                  AI Agent Architecture
+                </CardTitle>
+                <CardDescription>
+                  Multi-agent system orchestration with Azure AI Foundry
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Bot className="h-4 w-4 text-blue-600" />
+                      <span className="font-semibold text-blue-900">Master Orchestrator</span>
+                    </div>
+                    <p className="text-sm text-blue-700">Coordinates all agent activities and LinkedIn API interactions</p>
+                  </div>
+                  
+                  <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Sparkles className="h-4 w-4 text-purple-600" />
+                      <span className="font-semibold text-purple-900">Job Generator Agent</span>
+                    </div>
+                    <p className="text-sm text-purple-700">Creates compelling job advertisements using AI</p>
+                  </div>
+                  
+                  <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Eye className="h-4 w-4 text-green-600" />
+                      <span className="font-semibold text-green-900">Candidate Evaluator</span>
+                    </div>
+                    <p className="text-sm text-green-700">Analyzes and scores candidate applications automatically</p>
+                  </div>
+                </div>
+                
+                <div className="text-xs text-gray-500 space-y-1 pt-2 border-t">
+                  <p>• Real-time message queue communication</p>
+                  <p>• Azure AI Foundry model integration</p>
+                  <p>• LinkedIn Developer API connectivity</p>
+                  <p>• Automated candidate evaluation pipeline</p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Active Job Advertisements */}
           <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-            <CardHeader className="pb-4">
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <Sparkles className="h-6 w-6 text-purple-600" />
-                AI Job Advertisement Generator
-              </CardTitle>
+            <CardHeader>
+              <CardTitle className="text-xl">Your Job Advertisements</CardTitle>
               <CardDescription>
-                Provide basic details and let our AI create a professional job advertisement
+                Manage AI-generated job advertisements with real-time candidate evaluation
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleCreateAd} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Job Role</label>
-                  <Input
-                    placeholder="e.g., Senior Software Engineer"
-                    value={jobDetails.role}
-                    onChange={(e) => setJobDetails(prev => ({ ...prev, role: e.target.value }))}
-                    required
-                  />
+              {activeJobs.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <Bot className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                  <p>No job advertisements created yet.</p>
+                  <p className="text-sm">Use the AI generator above to create your first job ad.</p>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Company Name</label>
-                  <Input
-                    placeholder="e.g., TechCorp Inc."
-                    value={jobDetails.company}
-                    onChange={(e) => setJobDetails(prev => ({ ...prev, company: e.target.value }))}
-                    required
-                  />
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {activeJobs.map((ad) => (
+                    <Card key={ad.id} className="border border-gray-200 hover:shadow-md transition-shadow">
+                      <CardHeader className="pb-3">
+                        <div className="flex justify-between items-start">
+                          <CardTitle className="text-lg line-clamp-2">{ad.title}</CardTitle>
+                          <Badge className={getStatusColor(ad.status)}>
+                            {ad.status}
+                          </Badge>
+                        </div>
+                        <CardDescription className="text-sm line-clamp-3">
+                          {ad.description}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="pt-0">
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-sm font-medium text-gray-600">Requirements:</p>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {ad.requirements?.slice(0, 3).map((req: string, index: number) => (
+                                <Badge key={index} variant="secondary" className="text-xs">
+                                  {req}
+                                </Badge>
+                              ))}
+                              {ad.requirements?.length > 3 && (
+                                <span className="text-xs text-gray-500">+{ad.requirements.length - 3} more</span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex justify-between text-sm text-gray-600">
+                            <span>{ad.location}</span>
+                            <span>{ad.salary}</span>
+                          </div>
+                          {ad.linkedInPostId && (
+                            <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
+                              LinkedIn Post: {ad.linkedInPostId}
+                            </div>
+                          )}
+                          <div className="flex justify-between items-center pt-2 border-t">
+                            <span className="text-xs text-gray-500">Created: {ad.createdAt}</span>
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-600">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Location</label>
-                  <Input
-                    placeholder="e.g., Amsterdam, Netherlands"
-                    value={jobDetails.location}
-                    onChange={(e) => setJobDetails(prev => ({ ...prev, location: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Key Requirements (comma-separated)</label>
-                  <Input
-                    placeholder="e.g., React, TypeScript, 5+ years experience"
-                    value={jobDetails.requirements}
-                    onChange={(e) => setJobDetails(prev => ({ ...prev, requirements: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Additional Information</label>
-                  <Textarea
-                    placeholder="Any specific details about the role, company culture, benefits..."
-                    value={jobDetails.additional}
-                    onChange={(e) => setJobDetails(prev => ({ ...prev, additional: e.target.value }))}
-                    rows={3}
-                  />
-                </div>
-                <Button 
-                  type="submit" 
-                  disabled={isCreating}
-                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                >
-                  {isCreating ? (
-                    <>
-                      <Sparkles className="animate-spin h-4 w-4 mr-2" />
-                      AI is creating your job ad...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Generate Job Advertisement
-                    </>
-                  )}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-
-          {/* LinkedIn Integration Status */}
-          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-xl">LinkedIn Integration</CardTitle>
-              <CardDescription>
-                Connect your LinkedIn account to automatically post job advertisements
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <h4 className="font-semibold text-blue-900 mb-2">Integration Status</h4>
-                <Badge className="bg-orange-100 text-orange-800">Authentication Required</Badge>
-                <p className="text-sm text-blue-700 mt-2">
-                  Connect your LinkedIn Developer account to enable automatic job posting
-                </p>
-              </div>
-              <Button className="w-full" variant="outline">
-                Connect LinkedIn Developer Account
-              </Button>
-              <div className="text-xs text-gray-500 space-y-1">
-                <p>• Requires LinkedIn Marketing API access</p>
-                <p>• Job posts will be published to your company page</p>
-                <p>• Analytics and performance tracking included</p>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>
-
-        {/* Existing Job Advertisements */}
-        <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="text-xl">Your Job Advertisements</CardTitle>
-            <CardDescription>
-              Manage and track your published job advertisements
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {jobAds.map((ad) => (
-                <Card key={ad.id} className="border border-gray-200 hover:shadow-md transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start">
-                      <CardTitle className="text-lg line-clamp-2">{ad.title}</CardTitle>
-                      <Badge className={getStatusColor(ad.status)}>
-                        {ad.status}
-                      </Badge>
-                    </div>
-                    <CardDescription className="text-sm line-clamp-3">
-                      {ad.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="pt-0">
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600">Requirements:</p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {ad.requirements.slice(0, 3).map((req, index) => (
-                            <Badge key={index} variant="secondary" className="text-xs">
-                              {req}
-                            </Badge>
-                          ))}
-                          {ad.requirements.length > 3 && (
-                            <span className="text-xs text-gray-500">+{ad.requirements.length - 3} more</span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex justify-between text-sm text-gray-600">
-                        <span>{ad.location}</span>
-                        <span>{ad.salary}</span>
-                      </div>
-                      <div className="flex justify-between items-center pt-2 border-t">
-                        <span className="text-xs text-gray-500">Created: {ad.createdAt}</span>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-600">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
