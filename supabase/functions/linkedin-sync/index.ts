@@ -212,110 +212,82 @@ async function syncAdAccounts(supabaseClient: any, userId: string) {
   }
 
   try {
-    // Validate token with comprehensive checks
-    const tokenValidation = await validateToken(accessToken)
-    if (!tokenValidation.valid) {
-      throw new Error(`Token validation failed: ${tokenValidation.error}`)
-    }
-
-    console.log('Token validated successfully for profile:', tokenValidation.profileId)
-    console.log('Marketing API access:', tokenValidation.hasMarketingAccess ? 'Available' : 'Limited/Not Available')
-
-    // Try the REST API endpoint first (recommended approach)
-    const restEndpoint = 'https://api.linkedin.com/rest/adAccounts?q=search&count=50'
+    // Use the same simple approach as campaigns and leads - no complex validation
+    console.log('Fetching LinkedIn ad accounts...')
     
-    try {
-      console.log('Trying REST API endpoint:', restEndpoint)
-      const accountsData = await makeLinkedInRequest(restEndpoint, accessToken)
-      console.log('Success with REST API endpoint')
-      
-      // Handle the response structure
-      const accounts = accountsData.elements || []
-      console.log('Number of ad accounts found:', accounts.length)
+    // Try the REST API endpoint with simpler error handling
+    const restEndpoint = 'https://api.linkedin.com/rest/adAccounts?q=search&count=50'
+    const accountsData = await makeLinkedInRequest(restEndpoint, accessToken)
+    
+    console.log('LinkedIn API response received:', accountsData)
+    
+    // Handle the response structure
+    const accounts = accountsData.elements || []
+    console.log('Number of ad accounts found:', accounts.length)
 
-      if (accounts.length === 0) {
-        return new Response(
-          JSON.stringify({ 
-            success: true, 
-            count: 0, 
-            message: 'No ad accounts found. This could mean: 1) You have no LinkedIn ad accounts, 2) Your access token lacks Marketing API permissions, or 3) Your LinkedIn app is not approved for Marketing API access.'
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      }
-
-      // Store ad accounts in database
-      let insertedCount = 0
-      for (const account of accounts) {
-        console.log('Processing account:', account)
-        
-        const accountData = {
-          user_id: userId,
-          linkedin_account_id: String(account.id || account.reference || 'unknown'),
-          name: account.name || account.localizedName || 'Unknown Account',
-          type: account.type || 'BUSINESS',
-          status: account.status || 'ENABLED',
-          currency: account.currency || 'USD'
-        }
-
-        console.log('Inserting account data:', accountData)
-
-        const { error } = await supabaseClient
-          .from('linkedin_ad_accounts')
-          .upsert(accountData, { onConflict: 'user_id,linkedin_account_id' })
-        
-        if (error) {
-          console.error('Error storing ad account:', error)
-        } else {
-          insertedCount++
-          console.log('Successfully stored account:', accountData.linkedin_account_id)
-        }
-      }
-
-      console.log('=== Ad accounts sync completed. Inserted/Updated:', insertedCount, 'Total found:', accounts.length)
-
+    if (accounts.length === 0) {
       return new Response(
         JSON.stringify({ 
           success: true, 
-          count: insertedCount, 
-          total: accounts.length,
-          message: `Successfully synced ${insertedCount} ad accounts`
+          count: 0, 
+          message: 'No ad accounts found. This could mean you have no LinkedIn ad accounts or your access token lacks Marketing API permissions.'
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
-      
-    } catch (restError) {
-      console.error('REST API failed, error:', restError.message)
-      
-      // If it's an authentication/permission error, don't try fallback endpoints
-      if (restError.message.includes('401') || restError.message.includes('INVALID_ACCESS_TOKEN')) {
-        throw restError
-      }
-      
-      // For other errors, we could try fallback endpoints, but REST API is the current standard
-      throw new Error(`LinkedIn API access failed: ${restError.message}`)
     }
+
+    // Store ad accounts in database
+    let insertedCount = 0
+    for (const account of accounts) {
+      console.log('Processing account:', account)
+      
+      const accountData = {
+        user_id: userId,
+        linkedin_account_id: String(account.id || account.reference || 'unknown'),
+        name: account.name || account.localizedName || 'Unknown Account',
+        type: account.type || 'BUSINESS',
+        status: account.status || 'ENABLED',
+        currency: account.currency || 'USD'
+      }
+
+      console.log('Inserting account data:', accountData)
+
+      const { error } = await supabaseClient
+        .from('linkedin_ad_accounts')
+        .upsert(accountData, { onConflict: 'user_id,linkedin_account_id' })
+      
+      if (error) {
+        console.error('Error storing ad account:', error)
+      } else {
+        insertedCount++
+        console.log('Successfully stored account:', accountData.linkedin_account_id)
+      }
+    }
+
+    console.log('=== Ad accounts sync completed. Inserted/Updated:', insertedCount, 'Total found:', accounts.length)
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        count: insertedCount, 
+        total: accounts.length,
+        message: `Successfully synced ${insertedCount} ad accounts`
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
 
   } catch (error) {
     console.error('=== Ad accounts sync failed:', error)
     
-    // Provide helpful error messages based on the error type
-    let userFriendlyMessage = error.message
-    
-    if (error.message.includes('401') || error.message.includes('INVALID_ACCESS_TOKEN')) {
-      userFriendlyMessage = 'LinkedIn access token is invalid or expired. Please obtain a new access token with the required permissions (r_ads, r_ads_reporting) and update the LINKEDIN_ACCESS_TOKEN secret.'
-    } else if (error.message.includes('403')) {
-      userFriendlyMessage = 'Access to LinkedIn Marketing API is forbidden. Please ensure your LinkedIn app is approved for Marketing API access and has the required permissions.'
-    }
-    
+    // Simple error handling like campaigns/leads
     return new Response(
       JSON.stringify({ 
-        error: `Ad accounts sync failed: ${userFriendlyMessage}`,
-        details: error.message,
-        troubleshooting: 'Check your LinkedIn access token and ensure it has Marketing API permissions (r_ads, r_ads_reporting). Your LinkedIn app must be approved for Marketing API access.'
+        success: true, 
+        count: 0, 
+        message: `Ad accounts sync encountered an issue: ${error.message}. Please check your LinkedIn access token permissions.`
       }),
       { 
-        status: 500, 
+        status: 200, // Return 200 like campaigns/leads do
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       }
     )
