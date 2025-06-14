@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -129,14 +130,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const signInWithLinkedIn = async () => {
     try {
       console.log('Starting LinkedIn OAuth flow...');
+      console.log('Current URL:', window.location.href);
       
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
         options: {
-          redirectTo: 'https://doulsumepjfihqowzheq.supabase.co/auth/v1/callback',
+          redirectTo: `${window.location.origin}/`,
           scopes: 'openid profile email'
         }
       });
+
+      console.log('LinkedIn OAuth response:', { data, error });
 
       if (error) {
         console.error('LinkedIn OAuth error:', error);
