@@ -120,11 +120,11 @@ class AgentCommunicationService {
   async createJobAd(jobData: any) {
     console.log('[Agent Communication] Creating job ad with AI agents');
     this.setState({ systemStatus: 'processing' });
-    
+
     try {
       // Create job ad using AI agents (this calls Azure AI)
       const { masterOrchestrator } = await import('./aiAgents');
-      
+
       const aiResult = await masterOrchestrator.processMessage({
         id: Date.now().toString(),
         type: 'job_creation',
@@ -133,7 +133,6 @@ class AgentCommunicationService {
         agentId: 'master'
       });
 
-      // When building formattedJobAd:
       const formattedJobAd = {
         id: aiResult.jobId,
         title: aiResult.jobAd.title,
@@ -149,12 +148,35 @@ class AgentCommunicationService {
         createdAt: new Date().toLocaleDateString()
       };
 
-      // Add to active jobs state
+      // Post to LinkedIn after generation
+      try {
+        console.log('[Agent Communication] Posting job ad to LinkedIn...');
+        const resp = await fetch('/functions/v1/linkedin-post-job', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            jobAd: formattedJobAd
+          })
+        });
+        const linkedInResult = await resp.json();
+        if (!resp.ok || !linkedInResult.success) {
+          throw new Error(linkedInResult.error || 'Unknown error posting to LinkedIn');
+        }
+        console.log('[Agent Communication] Job ad posted to LinkedIn:', linkedInResult);
+        formattedJobAd.linkedInPostId = linkedInResult.linkedInResponse?.id || formattedJobAd.linkedInPostId;
+      } catch (err) {
+        console.error('[Agent Communication] Failed to post job to LinkedIn:', err);
+        // Optionally show a toast in the UI by bubbling up the error
+        // For now, just continue
+      }
+
       this.setState({
         activeJobs: [...this.state.activeJobs, formattedJobAd],
         systemStatus: 'idle'
       });
-      
+
       console.log('[Agent Communication] Job ad created and added to active jobs:', formattedJobAd.title);
       return formattedJobAd;
     } catch (error) {
