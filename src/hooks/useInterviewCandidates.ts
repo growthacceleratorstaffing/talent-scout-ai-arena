@@ -31,7 +31,13 @@ export const useInterviewCandidates = () => {
       }
 
       // Get candidate IDs from the recommended candidates
-      const candidateIds = recommendedCandidates.map(rc => rc.candidateId);
+      const candidateIds = recommendedCandidates.map(rc => rc.candidateId).filter(id => id && id !== 'undefined');
+
+      if (candidateIds.length === 0) {
+        setCandidates([]);
+        setLoading(false);
+        return;
+      }
 
       // Fetch full candidate data from database
       const { data: candidatesData, error: candidatesError } = await supabase
