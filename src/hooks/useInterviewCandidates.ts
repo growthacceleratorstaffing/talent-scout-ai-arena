@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Tables } from "@/integrations/supabase/types";
 import { toast } from "@/hooks/use-toast";
+import { agentCommunicationService } from "@/services/agentCommunication";
 
 type Candidate = Tables<"candidates">;
 type CandidateInterview = Tables<"candidate_interviews">;
@@ -19,14 +20,24 @@ export const useInterviewCandidates = () => {
     try {
       setLoading(true);
       
-      // Get recommended candidates
-      const { data: recommendedCandidates, error: candidatesError } = await supabase
+      // Get recommended candidates from the orchestration agent
+      const recommendedCandidates = agentCommunicationService.getRecommendedCandidates();
+      console.log('[useInterviewCandidates] Recommended candidates from agent:', recommendedCandidates);
+      
+      if (recommendedCandidates.length === 0) {
+        setCandidates([]);
+        setLoading(false);
+        return;
+      }
+
+      // Get candidate IDs from the recommended candidates
+      const candidateIds = recommendedCandidates.map(rc => rc.candidateId);
+
+      // Fetch full candidate data from database
+      const { data: candidatesData, error: candidatesError } = await supabase
         .from("candidates")
         .select("*")
-        .in("id", 
-          // Subquery to get candidate IDs from candidate_responses where status is 'recommended'
-          // We'll need to fetch this separately due to Supabase limitations
-        );
+        .in("id", candidateIds);
 
       if (candidatesError) {
         console.error("Error fetching candidates:", candidatesError);
@@ -38,47 +49,18 @@ export const useInterviewCandidates = () => {
         return;
       }
 
-      // Get candidate responses to filter recommended ones
-      const { data: responses, error: responsesError } = await supabase
-        .from("candidate_responses")
-        .select("candidate_id")
-        .eq("status", "recommended");
-
-      if (responsesError) {
-        console.error("Error fetching responses:", responsesError);
-        toast({
-          title: "Error",
-          description: "Failed to fetch candidate responses",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const recommendedCandidateIds = responses?.map(r => r.candidate_id) || [];
-
-      // Filter candidates to only recommended ones
-      const { data: filteredCandidates, error: filteredError } = await supabase
-        .from("candidates")
-        .select("*")
-        .in("id", recommendedCandidateIds);
-
-      if (filteredError) {
-        console.error("Error fetching filtered candidates:", filteredError);
-        return;
-      }
-
       // Get interview data for these candidates
       const { data: interviews, error: interviewsError } = await supabase
         .from("candidate_interviews")
         .select("*")
-        .in("candidate_id", recommendedCandidateIds);
+        .in("candidate_id", candidateIds);
 
       if (interviewsError) {
         console.error("Error fetching interviews:", interviewsError);
       }
 
       // Combine candidates with their interview data
-      const candidatesWithInterviews: CandidateWithInterview[] = (filteredCandidates || []).map(candidate => ({
+      const candidatesWithInterviews: CandidateWithInterview[] = (candidatesData || []).map(candidate => ({
         ...candidate,
         interview: interviews?.find(interview => interview.candidate_id === candidate.id)
       }));
@@ -98,11 +80,17 @@ export const useInterviewCandidates = () => {
 
   const startInterview = async (candidateId: string, jobId: string) => {
     try {
+      // Use the default job ID from recommended candidates
+      const recommendedCandidate = agentCommunicationService.getRecommendedCandidates()
+        .find(rc => rc.candidateId === candidateId);
+      
+      const actualJobId = recommendedCandidate?.jobId || jobId;
+
       const { error } = await supabase
         .from("candidate_interviews")
         .insert({
           candidate_id: candidateId,
-          job_id: jobId,
+          job_id: actualJobId,
           stage: "in_progress",
           started_at: new Date().toISOString(),
         });
@@ -151,14 +139,14 @@ export const useInterviewCandidates = () => {
     messages: any[]
   ) => {
     try {
-      const finalVerdict = verdict === "approved" ? "passed" : "failed";
+      const finalStage = verdict === "approved" ? "passed" : "failed";
       
       const { error } = await supabase
         .from("candidate_interviews")
         .update({
           stage: "completed",
           score: score,
-          verdict: finalVerdict,
+          verdict: finalStage,
           interview_messages: messages,
           completed_at: new Date().toISOString(),
         })
@@ -172,7 +160,7 @@ export const useInterviewCandidates = () => {
       // Update candidate stage
       const { error: updateError } = await supabase
         .from("candidates")
-        .update({ interview_stage: finalVerdict })
+        .update({ interview_stage: finalStage })
         .eq("id", candidateId);
 
       if (updateError) {

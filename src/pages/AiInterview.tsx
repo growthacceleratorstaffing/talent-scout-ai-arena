@@ -208,14 +208,15 @@ const AiInterview: React.FC = () => {
       
       <div className="mb-6">
         <p className="text-gray-600">
-          Recommended candidates who need to go through the AI interview process.
+          Candidates recommended by the orchestration agent evaluation are automatically queued for AI interviews. 
+          This is the next step in the recruitment process after initial screening.
         </p>
       </div>
 
       {loading ? (
         <Card className="p-8 text-center">
           <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p>Loading candidates...</p>
+          <p>Loading candidates from orchestration agent...</p>
         </Card>
       ) : (
         <CandidateInterviewList
