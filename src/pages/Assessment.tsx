@@ -15,15 +15,37 @@ const Assessment: React.FC = () => {
   const { assessments, startAssessment, submitAssessment, loading } = useAssessmentCandidates();
   const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
 
+  // Debug logging
+  console.log('[Assessment] All recommended candidates:', recommendedCandidates);
+  console.log('[Assessment] Number of recommended candidates:', recommendedCandidates.length);
+
   // Filter candidates who have passed AI interview and are eligible for assessment
-  const eligibleCandidates = recommendedCandidates.filter(candidate => 
-    candidate && candidate.candidateId && candidate.recommendation === 'recommend' && candidate.score >= 70
-  );
+  const eligibleCandidates = recommendedCandidates.filter(candidate => {
+    const isEligible = candidate && 
+                      candidate.candidateId && 
+                      candidate.recommendation === 'recommend' && 
+                      candidate.score >= 70;
+    
+    console.log('[Assessment] Candidate eligibility check:', {
+      candidate: candidate?.candidateName || candidate?.candidateId,
+      hasId: !!candidate?.candidateId,
+      recommendation: candidate?.recommendation,
+      score: candidate?.score,
+      isEligible
+    });
+    
+    return isEligible;
+  });
 
   // Candidates who haven't been through AI interview yet
   const nonInterviewedCandidates = recommendedCandidates.filter(candidate => 
-    candidate && candidate.candidateId && (!candidate.score || candidate.score < 70 || candidate.recommendation !== 'recommend')
+    candidate && 
+    candidate.candidateId && 
+    (!candidate.score || candidate.score < 70 || candidate.recommendation !== 'recommend')
   );
+
+  console.log('[Assessment] Eligible candidates:', eligibleCandidates.length);
+  console.log('[Assessment] Non-interviewed candidates:', nonInterviewedCandidates.length);
 
   const handleStartAssessment = async (candidate: any) => {
     await startAssessment(candidate);
@@ -63,6 +85,14 @@ const Assessment: React.FC = () => {
           <p className="text-gray-600">
             AI-powered technical assessments for candidates who have passed the AI interview
           </p>
+          
+          {/* Debug info */}
+          <div className="mt-4 p-4 bg-blue-50 rounded-lg text-sm">
+            <p><strong>Debug Info:</strong></p>
+            <p>Total recommended candidates: {recommendedCandidates.length}</p>
+            <p>Eligible for assessment: {eligibleCandidates.length}</p>
+            <p>Need AI interview: {nonInterviewedCandidates.length}</p>
+          </div>
         </div>
 
         <div className="grid gap-6">
@@ -116,6 +146,18 @@ const Assessment: React.FC = () => {
                   <p className="text-sm text-gray-400">
                     Candidates must pass the AI interview with a score of 70+ to be eligible for assessment.
                   </p>
+                  {recommendedCandidates.length > 0 && (
+                    <div className="mt-4 p-4 bg-gray-50 rounded-lg text-left">
+                      <p className="text-sm font-medium mb-2">All recommended candidates:</p>
+                      {recommendedCandidates.map((candidate, index) => (
+                        <div key={index} className="text-xs text-gray-600 mb-1">
+                          {candidate.candidateName || candidate.candidateId} - 
+                          Score: {candidate.score || 'N/A'} - 
+                          Recommendation: {candidate.recommendation || 'N/A'}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ) : (
                 eligibleCandidates.map((candidate) => {
