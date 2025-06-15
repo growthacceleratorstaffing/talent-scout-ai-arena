@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const GENERAL_CHATBOT_KNOWLEDGE = `
 You are an expert, modern HR assistant and technical evaluator specializing in job interviews.
@@ -54,32 +55,23 @@ Candidate: ${input}
 
     try {
       console.log('[useAIAgentChat] Calling azure-ai-chat function...');
-      const res = await fetch(`${window.location.origin}/functions/v1/azure-ai-chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
+      
+      const { data, error: functionError } = await supabase.functions.invoke('azure-ai-chat', {
+        body: { prompt }
       });
 
-      console.log('[useAIAgentChat] Response status:', res.status);
-
-      let data: any = {};
-      try {
-        data = await res.json();
-        console.log('[useAIAgentChat] Response data:', data);
-      } catch (jsonError) {
-        console.error('[useAIAgentChat] JSON parsing error:', jsonError);
-        setError(`Invalid response from AI service (status: ${res.status})`);
+      if (functionError) {
+        console.error('[useAIAgentChat] Function error:', functionError);
+        setError(`AI Error: ${functionError.message}`);
         setLoading(false);
         return;
       }
 
-      if (!res.ok || data.error) {
+      console.log('[useAIAgentChat] Response data:', data);
+
+      if (data.error) {
         console.error('[useAIAgentChat] API error:', data.error);
-        setError(
-          typeof data?.error === "string"
-            ? `AI Error: ${data.error}`
-            : `Invalid response from AI service (status: ${res.status})`
-        );
+        setError(`AI Error: ${data.error}`);
         setLoading(false);
         return;
       }

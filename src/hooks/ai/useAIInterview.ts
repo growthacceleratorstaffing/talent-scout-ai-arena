@@ -1,5 +1,6 @@
 
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 /**
  * Message structure for UI display.
@@ -77,34 +78,23 @@ Do NOT repeat previous verdicts or scores. Always adapt to the latest candidate 
 
     try {
       console.log('[useAIInterview] Calling azure-ai-chat function...');
-      const res = await fetch(`${window.location.origin}/functions/v1/azure-ai-chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
+      
+      const { data, error: functionError } = await supabase.functions.invoke('azure-ai-chat', {
+        body: { prompt }
       });
 
-      console.log('[useAIInterview] Response status:', res.status);
-
-      let data: any = {};
-      try {
-        data = await res.json();
-        console.log('[useAIInterview] Response data:', data);
-      } catch (jsonErr) {
-        console.error('[useAIInterview] JSON parsing error:', jsonErr);
-        setError(
-          `AI error: Invalid response (status: ${res.status}). Please try again.`
-        );
+      if (functionError) {
+        console.error('[useAIInterview] Function error:', functionError);
+        setError(`AI Error: ${functionError.message}`);
         setLoading(false);
         return;
       }
 
-      if (!res.ok || data.error) {
+      console.log('[useAIInterview] Response data:', data);
+
+      if (data.error) {
         console.error('[useAIInterview] API error:', data.error);
-        setError(
-          data.error
-            ? `AI Error: ${data.error}`
-            : `AI service is not reachable (status: ${res.status})`
-        );
+        setError(`AI Error: ${data.error}`);
         setLoading(false);
         return;
       }
