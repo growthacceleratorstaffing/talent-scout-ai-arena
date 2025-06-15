@@ -19,12 +19,13 @@ serve(async (req) => {
     // Load Azure secrets from environment
     const azureApiKey = Deno.env.get('AZURE_OPENAI_API_KEY');
     const azureEndpoint = Deno.env.get('AZURE_OPENAI_ENDPOINT');
-    const deploymentName = Deno.env.get('AZURE_OPENAI_DEPLOYMENT_NAME') || 'gpt-4';
+    const deploymentName = Deno.env.get('AZURE_OPENAI_DEPLOYMENT_NAME') || 'gpt-4o';
 
     console.log('Azure config check:', {
       hasApiKey: !!azureApiKey,
       hasEndpoint: !!azureEndpoint,
-      deploymentName: deploymentName
+      deploymentName: deploymentName,
+      endpointFormat: azureEndpoint
     });
 
     if (!azureApiKey || !azureEndpoint) {
@@ -34,8 +35,8 @@ serve(async (req) => {
       });
     }
 
-    // Construct the proper Azure OpenAI endpoint URL
-    const azureUrl = `${azureEndpoint}/openai/deployments/${deploymentName}/chat/completions?api-version=2023-12-01-preview`;
+    // Construct the proper Azure OpenAI endpoint URL with updated API version
+    const azureUrl = `${azureEndpoint}/openai/deployments/${deploymentName}/chat/completions?api-version=2024-02-15-preview`;
     
     console.log('Making request to Azure URL:', azureUrl);
 
@@ -71,9 +72,18 @@ serve(async (req) => {
       // Provide more specific error messages
       if (azureRes.status === 404) {
         return new Response(JSON.stringify({ 
-          error: `Azure deployment not found. Check if deployment name '${deploymentName}' exists and endpoint is correct.` 
+          error: `Azure deployment not found. Check if deployment name '${deploymentName}' exists and endpoint is correct. Endpoint should be like: https://your-resource.openai.azure.com` 
         }), {
           status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      
+      if (azureRes.status === 401) {
+        return new Response(JSON.stringify({ 
+          error: "Azure API authentication failed. Check your API key." 
+        }), {
+          status: 401,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
