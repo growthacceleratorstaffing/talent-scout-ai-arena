@@ -19,6 +19,7 @@ export const useAgentState = () => {
 
   useEffect(() => {
     const handleStateChange = (newState: AgentState) => {
+      console.log('[useAgentState] State updated:', newState); // Debugging state updates
       setState(newState);
     };
 

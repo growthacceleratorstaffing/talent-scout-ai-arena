@@ -32,7 +32,8 @@ class AgentCommunicationService {
       
       // Clean up any existing jobs with JSON data
       const cleanedJobs = this.cleanUpJobAds([]);
-      
+      console.log('[Agent Communication] Jobs loaded from Supabase (expected initial):', cleanedJobs);
+
       this.setState({
         systemStatus: 'idle',
         evaluationResults: [
@@ -45,6 +46,7 @@ class AgentCommunicationService {
       console.log('[Agent Communication] Initialized with real Supabase data');
       console.log('Recommended candidates:', supabaseAgentService.getRecommendedCandidates().length);
       console.log('Non-recommended candidates:', supabaseAgentService.getNonRecommendedCandidates().length);
+      console.log('[Agent Communication] State after Supabase load:', this.state);
     } catch (error) {
       console.error('[Agent Communication] Error initializing:', error);
       this.setState({ systemStatus: 'error' });
@@ -111,9 +113,10 @@ class AgentCommunicationService {
     
     // Clean up jobs whenever state is updated
     if (newState.activeJobs) {
-      this.state.activeJobs = this.cleanUpJobAds(this.state.activeJobs);
+      this.state.activeJobs = this.cleanUpJobAds(this.state.activeJobs || []);
     }
-    
+    console.log('[Agent Communication] setState activeJobs:', this.state.activeJobs);
+
     this.stateSubscribers.forEach(callback => callback(this.state));
   }
 
@@ -176,6 +179,7 @@ class AgentCommunicationService {
         activeJobs: [...this.state.activeJobs, formattedJobAd],
         systemStatus: 'idle'
       });
+      console.log('[Agent Communication] After creation, activeJobs:', this.state.activeJobs);
 
       console.log('[Agent Communication] Job ad created and added to active jobs:', formattedJobAd.title);
       return formattedJobAd;

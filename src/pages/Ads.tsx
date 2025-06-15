@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +34,10 @@ const Ads = () => {
     requirements: '',
     additional: ''
   });
+
+  React.useEffect(() => {
+    console.log('[Ads page] activeJobs in UI:', activeJobs);
+  }, [activeJobs]);
 
   const handleCreateAd = async (e: React.FormEvent) => {
     e.preventDefault();
