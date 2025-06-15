@@ -19,16 +19,28 @@ serve(async (req) => {
     // Load Azure secrets from environment
     const azureApiKey = Deno.env.get('AZURE_OPENAI_API_KEY');
     const azureEndpoint = Deno.env.get('AZURE_OPENAI_ENDPOINT');
+    const deploymentName = Deno.env.get('AZURE_OPENAI_DEPLOYMENT_NAME') || 'gpt-4';
+
+    console.log('Azure config check:', {
+      hasApiKey: !!azureApiKey,
+      hasEndpoint: !!azureEndpoint,
+      deploymentName: deploymentName
+    });
 
     if (!azureApiKey || !azureEndpoint) {
-      return new Response(JSON.stringify({ error: "Azure API credentials not set." }), {
+      return new Response(JSON.stringify({ error: "Azure API credentials not configured. Please set AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT." }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
+    // Construct the proper Azure OpenAI endpoint URL
+    const azureUrl = `${azureEndpoint}/openai/deployments/${deploymentName}/chat/completions?api-version=2023-12-01-preview`;
+    
+    console.log('Making request to Azure URL:', azureUrl);
+
     // Prepare request to Azure OpenAI
-    const azureRes = await fetch(azureEndpoint, {
+    const azureRes = await fetch(azureUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -50,17 +62,32 @@ serve(async (req) => {
       }),
     });
 
+    console.log('Azure response status:', azureRes.status);
+
     if (!azureRes.ok) {
       const errorText = await azureRes.text();
       console.error("Azure AI error:", azureRes.status, errorText);
-      return new Response(JSON.stringify({ error: `Azure AI API error: ${azureRes.status}` }), {
+      
+      // Provide more specific error messages
+      if (azureRes.status === 404) {
+        return new Response(JSON.stringify({ 
+          error: `Azure deployment not found. Check if deployment name '${deploymentName}' exists and endpoint is correct.` 
+        }), {
+          status: 404,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+      
+      return new Response(JSON.stringify({ error: `Azure AI API error: ${azureRes.status} - ${errorText}` }), {
         status: azureRes.status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
     const resData = await azureRes.json();
-    const answer = resData.choices?.[0]?.message?.content || resData.content || "No answer from AI";
+    console.log('Azure response received successfully');
+    
+    const answer = resData.choices?.[0]?.message?.content || "No answer from AI";
 
     return new Response(
       JSON.stringify({ content: answer }),
@@ -68,7 +95,7 @@ serve(async (req) => {
     );
   } catch (err) {
     console.error("Error in azure-ai-chat function:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: `Function error: ${err.message}` }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
