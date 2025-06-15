@@ -14,6 +14,7 @@ import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import FloatingAIAgent from "@/components/ai/FloatingAIAgent";
 import SuperAIAgent from "@/components/ai/SuperAIAgent";
+import AiInterview from "./pages/AiInterview";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,11 @@ const App = () => (
             <Route path="/linkedin" element={
               <ProtectedRoute>
                 <LinkedIn />
+              </ProtectedRoute>
+            } />
+            <Route path="/ai-interview" element={
+              <ProtectedRoute>
+                <AiInterview />
               </ProtectedRoute>
             } />
             <Route path="*" element={<NotFound />} />
