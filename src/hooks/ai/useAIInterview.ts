@@ -13,8 +13,19 @@ export interface AIInterviewMessage {
 }
 
 /**
- * Hook for managing an AI-powered interview.
+ * General and job-specific interview knowledge.
  */
+const GENERAL_AI_KNOWLEDGE = `
+You are an expert technical interviewer, up-to-date with modern best practices in interviewing software candidates and have deep knowledge of software engineering, technology industry expectations, hiring standards, and candidate evaluation.
+Ask relevant, friendly, and up-to-date interview questions, one at a time.
+If any job information is provided, challenge the fit for that specific job.
+After each candidate response, provide:
+  - Your next interview message/question.
+  - A JSON verdict with a "score" (1-100), "verdict" ("approved" or "non-recommended"), and a short "comment".
+Never simply copy/paste the candidate's text—always produce original, creative follow-ups and project ideas. If asked to "make up a project", invent a realistic sample project using your knowledge.
+`;
+
+
 export function useAIInterview(jobContext?: string) {
   const [messages, setMessages] = useState<AIInterviewMessage[]>([
     {
@@ -37,16 +48,10 @@ export function useAIInterview(jobContext?: string) {
     setLoading(true);
     setError(null);
 
-    // Compose AI request: context, latest messages, and scoring instruction
-    let prompt = `You are an expert technical interviewer, following modern best practices for interviewing software candidates.
-Ask relevant, friendly, modern interview questions, one at a time.
-If any information about the job is provided below, use it to challenge their fit for this job.
-Review candidate responses and adapt your questions accordingly.
-After reading their response, provide:
-- Your next interview message/question.
-- A JSON verdict with a "score" (1-100), "verdict" ("approved" or "non-recommended"), and a short "comment".
-
-${jobContext ? `Job Context:\n${jobContext}\n` : ""}
+    // Compose AI request: give both job context and general AI interview knowledge
+    let prompt = `
+${GENERAL_AI_KNOWLEDGE}
+${jobContext ? `Job Opening:\n${jobContext}\n` : ""}
 
 Chat history:
 ${messages
@@ -57,10 +62,9 @@ ${messages
   .join("\n")}
 Candidate: ${input}
 
-Instructions:
+Instructions for AI Interviewer:
 1. Write your next message for the candidate.
 2. Beneath your message, respond ONLY with a code block in the following JSON format:
-
 \`\`\`json
 {
   "score": [1-100],
@@ -68,6 +72,7 @@ Instructions:
   "comment": "[brief assessment]"
 }
 \`\`\`
+Do NOT repeat previous verdicts or scores. Always adapt to the latest candidate answer. NEVER copy-paste the answer, always evaluate and generate an original response.
 `;
 
     try {
