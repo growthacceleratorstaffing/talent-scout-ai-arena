@@ -17,7 +17,7 @@ export const useAIAgentChat = () => {
   const sendMessage = async (prompt: string) => {
     setLoading(true);
     setError(null);
-    // Add user's message
+
     setMessages(prev => [...prev, { role: "user", content: prompt }]);
     try {
       const res = await fetch(CHAT_API_URL, {
@@ -39,7 +39,11 @@ export const useAIAgentChat = () => {
 
       if (!res.ok) {
         // Show backend error message if available, otherwise status code
-        setError(data?.error ? `AI Error: ${data.error}` : `AI Error: ${res.status} ${res.statusText}`);
+        setError(
+          typeof data?.error === "string"
+            ? `AI Error: ${data.error}`
+            : `AI Error: ${res.status} ${res.statusText}`
+        );
         setLoading(false);
         return;
       }
