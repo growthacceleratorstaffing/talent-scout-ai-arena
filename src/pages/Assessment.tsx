@@ -3,11 +3,12 @@ import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ClipboardCheck, User, Clock, CheckCircle, XCircle } from "lucide-react";
+import { ClipboardCheck, User, Clock, CheckCircle, XCircle, ArrowRight } from "lucide-react";
 import { useAgentState } from "@/hooks/useAgentState";
 import { useAssessmentCandidates } from "@/hooks/useAssessmentCandidates";
 import AssessmentForm from "@/components/assessment/AssessmentForm";
 import Navigation from "@/components/Navigation";
+import { Link } from "react-router-dom";
 
 const Assessment: React.FC = () => {
   const { recommendedCandidates } = useAgentState();
@@ -17,6 +18,11 @@ const Assessment: React.FC = () => {
   // Filter candidates who have passed AI interview and are eligible for assessment
   const eligibleCandidates = recommendedCandidates.filter(candidate => 
     candidate.recommendation === 'recommend' && candidate.score >= 70
+  );
+
+  // Candidates who haven't been through AI interview yet
+  const nonInterviewedCandidates = recommendedCandidates.filter(candidate => 
+    !candidate.score || candidate.score < 70 || candidate.recommendation !== 'recommend'
   );
 
   const handleStartAssessment = async (candidate: any) => {
@@ -55,18 +61,62 @@ const Assessment: React.FC = () => {
             AI Assessment Center
           </h1>
           <p className="text-gray-600">
-            AI-powered technical assessments for recommended candidates
+            AI-powered technical assessments for candidates who have passed the AI interview
           </p>
         </div>
 
         <div className="grid gap-6">
+          {/* Show message if there are candidates who need AI interview first */}
+          {nonInterviewedCandidates.length > 0 && (
+            <Card className="p-6 border-yellow-200 bg-yellow-50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-yellow-800 mb-2">
+                    Candidates Pending AI Interview
+                  </h2>
+                  <p className="text-yellow-700 mb-4">
+                    {nonInterviewedCandidates.length} candidate(s) need to complete the AI interview before they can take the assessment.
+                  </p>
+                </div>
+                <Link to="/ai-interview">
+                  <Button className="flex items-center gap-2">
+                    Go to AI Interview
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+              <div className="space-y-2 mt-4">
+                {nonInterviewedCandidates.slice(0, 3).map((candidate) => (
+                  <div key={candidate.candidateId} className="flex items-center gap-3 text-sm text-yellow-700">
+                    <User className="h-4 w-4" />
+                    <span>{candidate.candidateName || `Candidate ${candidate.candidateId.slice(0, 8)}`}</span>
+                    <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
+                      {candidate.score ? `Score: ${candidate.score}/100` : 'Not interviewed'}
+                    </Badge>
+                  </div>
+                ))}
+                {nonInterviewedCandidates.length > 3 && (
+                  <p className="text-sm text-yellow-600 italic">
+                    ... and {nonInterviewedCandidates.length - 3} more
+                  </p>
+                )}
+              </div>
+            </Card>
+          )}
+
+          {/* Eligible candidates for assessment */}
           <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Eligible Candidates</h2>
+            <h2 className="text-xl font-semibold mb-4">Candidates Ready for Assessment</h2>
             <div className="space-y-4">
               {eligibleCandidates.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">
-                  No candidates ready for assessment. Complete AI interviews first.
-                </p>
+                <div className="text-center py-8">
+                  <p className="text-gray-500 mb-4">
+                    No candidates ready for assessment yet.
+                  </p>
+                  <p className="text-sm text-gray-400">
+                    Candidates must pass the AI interview with a score of 70+ to be eligible for assessment.
+                  </p>
+                </div>
               ) : (
                 eligibleCandidates.map((candidate) => {
                   const assessment = assessments.find(a => a.candidateId === candidate.candidateId);
@@ -82,7 +132,7 @@ const Assessment: React.FC = () => {
                           <p className="text-sm text-gray-500">Interview Score: {candidate.score}/100</p>
                         </div>
                         <Badge variant="outline" className="bg-green-50 text-green-700">
-                          Recommended
+                          Interview Passed
                         </Badge>
                       </div>
                       <div className="flex items-center gap-3">
@@ -124,6 +174,7 @@ const Assessment: React.FC = () => {
             </div>
           </Card>
 
+          {/* Assessment Results */}
           {assessments.length > 0 && (
             <Card className="p-6">
               <h2 className="text-xl font-semibold mb-4">Assessment Results</h2>
