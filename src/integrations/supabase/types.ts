@@ -9,59 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      candidate_interviews: {
-        Row: {
-          candidate_id: string
-          completed_at: string | null
-          created_at: string
-          id: string
-          interview_data: Json | null
-          interview_messages: Json | null
-          job_id: string
-          score: number | null
-          stage: Database["public"]["Enums"]["interview_stage"]
-          started_at: string | null
-          updated_at: string
-          verdict: string | null
-        }
-        Insert: {
-          candidate_id: string
-          completed_at?: string | null
-          created_at?: string
-          id?: string
-          interview_data?: Json | null
-          interview_messages?: Json | null
-          job_id: string
-          score?: number | null
-          stage?: Database["public"]["Enums"]["interview_stage"]
-          started_at?: string | null
-          updated_at?: string
-          verdict?: string | null
-        }
-        Update: {
-          candidate_id?: string
-          completed_at?: string | null
-          created_at?: string
-          id?: string
-          interview_data?: Json | null
-          interview_messages?: Json | null
-          job_id?: string
-          score?: number | null
-          stage?: Database["public"]["Enums"]["interview_stage"]
-          started_at?: string | null
-          updated_at?: string
-          verdict?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "candidate_interviews_candidate_id_fkey"
-            columns: ["candidate_id"]
-            isOneToOne: false
-            referencedRelation: "candidates"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       candidate_responses: {
         Row: {
           candidate_id: string
@@ -125,7 +72,6 @@ export type Database = {
           email: string
           experience_years: number | null
           id: string
-          interview_stage: Database["public"]["Enums"]["interview_stage"] | null
           last_synced_at: string | null
           linkedin_id: string | null
           linkedin_profile_url: string | null
@@ -147,9 +93,6 @@ export type Database = {
           email: string
           experience_years?: number | null
           id?: string
-          interview_stage?:
-            | Database["public"]["Enums"]["interview_stage"]
-            | null
           last_synced_at?: string | null
           linkedin_id?: string | null
           linkedin_profile_url?: string | null
@@ -171,9 +114,6 @@ export type Database = {
           email?: string
           experience_years?: number | null
           id?: string
-          interview_stage?:
-            | Database["public"]["Enums"]["interview_stage"]
-            | null
           last_synced_at?: string | null
           linkedin_id?: string | null
           linkedin_profile_url?: string | null
@@ -643,12 +583,6 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
-      interview_stage:
-        | "pending"
-        | "in_progress"
-        | "completed"
-        | "passed"
-        | "failed"
       workable_role:
         | "admin"
         | "hiring_manager"
@@ -771,13 +705,6 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "moderator", "user"],
-      interview_stage: [
-        "pending",
-        "in_progress",
-        "completed",
-        "passed",
-        "failed",
-      ],
       workable_role: [
         "admin",
         "hiring_manager",
