@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 
 // API endpoint for chat (ensure the Azure chat function is deployed at this endpoint or update as needed)
@@ -26,9 +27,25 @@ export const useAIAgentChat = () => {
         },
         body: JSON.stringify({ prompt })
       });
-      const data = await res.json();
+
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch (jsonError) {
+        setError(`Invalid response from AI service (status: ${res.status})`);
+        setLoading(false);
+        return;
+      }
+
+      if (!res.ok) {
+        // Show backend error message if available, otherwise status code
+        setError(data?.error ? `AI Error: ${data.error}` : `AI Error: ${res.status} ${res.statusText}`);
+        setLoading(false);
+        return;
+      }
       if (data.error) {
         setError(`AI Error: ${data.error}`);
+        setLoading(false);
         return;
       }
       setMessages(prev => [
@@ -36,7 +53,7 @@ export const useAIAgentChat = () => {
         { role: "assistant", content: data.content || data.generatedText || "AI returned no answer." }
       ]);
     } catch (e: any) {
-      setError("An error occurred. Please try again.");
+      setError("Network error: " + (e?.message || "Unknown network problem."));
     } finally {
       setLoading(false);
     }
@@ -44,3 +61,4 @@ export const useAIAgentChat = () => {
 
   return { messages, sendMessage, loading, error };
 };
+
