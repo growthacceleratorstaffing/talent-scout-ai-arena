@@ -53,22 +53,28 @@ Candidate: ${input}
 `;
 
     try {
-      const res = await fetch("/functions/v1/azure-ai-chat", {
+      console.log('[useAIAgentChat] Calling azure-ai-chat function...');
+      const res = await fetch(`${window.location.origin}/functions/v1/azure-ai-chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt }),
       });
 
+      console.log('[useAIAgentChat] Response status:', res.status);
+
       let data: any = {};
       try {
         data = await res.json();
+        console.log('[useAIAgentChat] Response data:', data);
       } catch (jsonError) {
+        console.error('[useAIAgentChat] JSON parsing error:', jsonError);
         setError(`Invalid response from AI service (status: ${res.status})`);
         setLoading(false);
         return;
       }
 
       if (!res.ok || data.error) {
+        console.error('[useAIAgentChat] API error:', data.error);
         setError(
           typeof data?.error === "string"
             ? `AI Error: ${data.error}`
@@ -114,6 +120,7 @@ Candidate: ${input}
         }
       ]);
     } catch (e: any) {
+      console.error('[useAIAgentChat] Network error:', e);
       setError("Network error: " + (e?.message || "Unknown network problem."));
     } finally {
       setLoading(false);
