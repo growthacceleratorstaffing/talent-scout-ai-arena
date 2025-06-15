@@ -17,12 +17,12 @@ const Assessment: React.FC = () => {
 
   // Filter candidates who have passed AI interview and are eligible for assessment
   const eligibleCandidates = recommendedCandidates.filter(candidate => 
-    candidate.recommendation === 'recommend' && candidate.score >= 70
+    candidate && candidate.candidateId && candidate.recommendation === 'recommend' && candidate.score >= 70
   );
 
   // Candidates who haven't been through AI interview yet
   const nonInterviewedCandidates = recommendedCandidates.filter(candidate => 
-    !candidate.score || candidate.score < 70 || candidate.recommendation !== 'recommend'
+    candidate && candidate.candidateId && (!candidate.score || candidate.score < 70 || candidate.recommendation !== 'recommend')
   );
 
   const handleStartAssessment = async (candidate: any) => {
@@ -89,7 +89,7 @@ const Assessment: React.FC = () => {
                 {nonInterviewedCandidates.slice(0, 3).map((candidate) => (
                   <div key={candidate.candidateId} className="flex items-center gap-3 text-sm text-yellow-700">
                     <User className="h-4 w-4" />
-                    <span>{candidate.candidateName || `Candidate ${candidate.candidateId.slice(0, 8)}`}</span>
+                    <span>{candidate.candidateName || `Candidate ${candidate.candidateId?.slice(0, 8) || 'Unknown'}`}</span>
                     <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
                       {candidate.score ? `Score: ${candidate.score}/100` : 'Not interviewed'}
                     </Badge>
@@ -128,7 +128,7 @@ const Assessment: React.FC = () => {
                           <User className="h-5 w-5 text-blue-600" />
                         </div>
                         <div>
-                          <h3 className="font-medium">{candidate.candidateName || `Candidate ${candidate.candidateId.slice(0, 8)}`}</h3>
+                          <h3 className="font-medium">{candidate.candidateName || `Candidate ${candidate.candidateId?.slice(0, 8) || 'Unknown'}`}</h3>
                           <p className="text-sm text-gray-500">Interview Score: {candidate.score}/100</p>
                         </div>
                         <Badge variant="outline" className="bg-green-50 text-green-700">
@@ -183,7 +183,7 @@ const Assessment: React.FC = () => {
                   <div key={assessment.id} className="p-4 border rounded-lg">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-medium">
-                        Candidate {assessment.candidateId.slice(0, 8)}
+                        Candidate {assessment.candidateId?.slice(0, 8) || 'Unknown'}
                       </h3>
                       <Badge variant={assessment.verdict === 'passed' ? 'default' : 'destructive'}>
                         {assessment.verdict}
