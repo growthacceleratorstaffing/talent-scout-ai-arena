@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 
 // API endpoint for chat (ensure the Azure chat function is deployed at this endpoint or update as needed)
@@ -20,7 +19,7 @@ export const useAIAgentChat = () => {
 
     setMessages(prev => [...prev, { role: "user", content: prompt }]);
     try {
-      const res = await fetch(CHAT_API_URL, {
+      const res = await fetch("/functions/v1/azure-ai-chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -38,11 +37,11 @@ export const useAIAgentChat = () => {
       }
 
       if (!res.ok) {
-        // Show backend error message if available, otherwise status code
+        // Show backend error message if available, otherwise status code + status text
         setError(
           typeof data?.error === "string"
             ? `AI Error: ${data.error}`
-            : `AI Error: ${res.status} ${res.statusText}`
+            : `Invalid response from AI service (status: ${res.status})`
         );
         setLoading(false);
         return;
@@ -65,4 +64,3 @@ export const useAIAgentChat = () => {
 
   return { messages, sendMessage, loading, error };
 };
-

@@ -1,5 +1,23 @@
 import { AgentMessage } from '../types/agent';
 
+// Helper: Detect "make up a project" intent and insert creative project generation into the AI prompt.
+function enhancePromptForProjectInstructions(originalPrompt: string, jobData: any) {
+  if (
+    /make (up )?(a )?(new )?project/i.test(originalPrompt) ||
+    /example project|sample project|invent a project/i.test(originalPrompt)
+  ) {
+    // Add explicit instruction for the AI to invent a creative, detailed example project.
+    return originalPrompt + `
+
+---
+If asked to make up, invent, or create a project that matches the job role, generate a realistic, fully invented example project relevant to the job. 
+Describe the project briefly (max 5 sentences): include goals, main tech used, what the project achieved, and why it matters for the role.
+NEVER copy/paste the user's text literally—always make up a new realistic project yourself.
+---`;
+  }
+  return originalPrompt;
+}
+
 export const masterOrchestrator = {
   async processMessage(message: AgentMessage): Promise<any> {
     console.log('[Master Orchestrator] Processing message:', message.type);
@@ -7,19 +25,14 @@ export const masterOrchestrator = {
     try {
       if (message.type === 'job_creation') {
         const jobData = message.payload;
-        
-        // Call Azure AI to generate the job ad
-        const response = await fetch('/api/azure-ai', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            prompt: `Create a professional job advertisement for:
+
+        // Enhance the prompt for project-generation requests
+        // (Assume the jobData.additionalInfo could have such a request)
+        let aiPrompt = `Create a professional job advertisement for:
 Role: ${jobData.role}
 Company: ${jobData.company}
 Location: ${jobData.location}
-Requirements: ${jobData.requirements.join(', ')}
+Requirements: ${Array.isArray(jobData.requirements) ? jobData.requirements.join(', ') : jobData.requirements}
 Additional Info: ${jobData.additionalInfo || ''}
 
 Please provide a well-structured job description with:
@@ -29,19 +42,34 @@ Please provide a well-structured job description with:
 - Benefits and compensation information
 - Professional tone
 
-Format the response as clean, readable text without CSS classes or formatting codes.`,
+If you are asked to make up/sample/invent a project, generate a novel, realistic project relevant to the job (no repetition, don't copy user's text).
+`;
+
+        // Enhance if the user prompt specifically asks for a "project"
+        aiPrompt = enhancePromptForProjectInstructions(aiPrompt, jobData);
+
+        // Call Azure AI via the Supabase Edge Function (be sure endpoint matches your function path)
+        const response = await fetch('/functions/v1/azure-ai-chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            prompt: aiPrompt,
             model: 'gpt-4o'
           })
         });
 
         if (!response.ok) {
-          console.error('Azure AI API error:', response.status);
+          const errorText = await response.text();
+          console.error('Azure AI API error:', response.status, errorText);
           // Fallback to structured manual creation
           return this.createFallbackJobAd(jobData);
         }
 
         const aiResult = await response.json();
-        const generatedContent = aiResult.choices?.[0]?.message?.content || '';
+        // Accept content from possible AI schema differences
+        const generatedContent = aiResult.choices?.[0]?.message?.content || aiResult.content || aiResult.generatedText || '';
 
         // Parse the AI response into structured data
         const jobAd = this.parseAIJobResponse(generatedContent, jobData);
