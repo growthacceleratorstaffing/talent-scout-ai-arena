@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Users, UserX, Briefcase, Bot } from "lucide-react";
+import { Sparkles, Users, UserX, Briefcase, Bot, ClipboardCheck } from "lucide-react";
 
 const Navigation = () => {
   const location = useLocation();
@@ -10,8 +10,9 @@ const Navigation = () => {
   const navItems = [
     { path: '/', label: 'Dashboard', icon: Briefcase },
     { path: '/ads', label: 'Job Ads', icon: Sparkles },
-    { path: '/ai-interview', label: 'AI Interview', icon: Bot },
     { path: '/talent-pool', label: 'Talent Pool', icon: Users },
+    { path: '/ai-interview', label: 'AI Interview', icon: Bot },
+    { path: '/assessment', label: 'Assessment', icon: ClipboardCheck },
     { path: '/profiles', label: 'Rejected', icon: UserX }
   ];
 

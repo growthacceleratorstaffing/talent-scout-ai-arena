@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,6 +16,7 @@ import NotFound from "./pages/NotFound";
 import FloatingAIAgent from "@/components/ai/FloatingAIAgent";
 import SuperAIAgent from "@/components/ai/SuperAIAgent";
 import AiInterview from "./pages/AiInterview";
+import Assessment from "./pages/Assessment";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +46,16 @@ const App = () => (
                 <TalentPool />
               </ProtectedRoute>
             } />
+            <Route path="/ai-interview" element={
+              <ProtectedRoute>
+                <AiInterview />
+              </ProtectedRoute>
+            } />
+            <Route path="/assessment" element={
+              <ProtectedRoute>
+                <Assessment />
+              </ProtectedRoute>
+            } />
             <Route path="/profiles" element={
               <ProtectedRoute>
                 <Profiles />
@@ -52,11 +64,6 @@ const App = () => (
             <Route path="/linkedin" element={
               <ProtectedRoute>
                 <LinkedIn />
-              </ProtectedRoute>
-            } />
-            <Route path="/ai-interview" element={
-              <ProtectedRoute>
-                <AiInterview />
               </ProtectedRoute>
             } />
             <Route path="*" element={<NotFound />} />

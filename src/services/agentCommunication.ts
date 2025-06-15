@@ -263,6 +263,64 @@ class AgentCommunicationService {
     // You could also update Supabase here if needed
     return updatedJobs.find(job => job.id === jobId);
   }
+
+  async startAssessment(assessmentData: any) {
+    console.log('[Agent Communication] Starting AI assessment for candidate');
+    this.setState({ systemStatus: 'processing' });
+
+    try {
+      // Use the master orchestrator to generate assessment questions
+      const { masterOrchestrator } = await import('./aiAgents');
+
+      const result = await masterOrchestrator.processMessage({
+        id: Date.now().toString(),
+        type: 'assessment_generation',
+        payload: {
+          candidateId: assessmentData.candidateId,
+          candidateName: assessmentData.candidateName,
+          jobId: assessmentData.jobId,
+          interviewScore: assessmentData.interviewScore
+        },
+        timestamp: new Date().toISOString(),
+        agentId: 'assessment-generator'
+      });
+
+      this.setState({ systemStatus: 'idle' });
+      return result;
+    } catch (error) {
+      console.error('[Agent Communication] Error starting assessment:', error);
+      this.setState({ systemStatus: 'error' });
+      throw error;
+    }
+  }
+
+  async submitAssessment(submissionData: any) {
+    console.log('[Agent Communication] Submitting assessment for AI evaluation');
+    this.setState({ systemStatus: 'processing' });
+
+    try {
+      // Use the master orchestrator to evaluate assessment answers
+      const { masterOrchestrator } = await import('./aiAgents');
+
+      const result = await masterOrchestrator.processMessage({
+        id: Date.now().toString(),
+        type: 'assessment_evaluation',
+        payload: {
+          candidateId: submissionData.candidateId,
+          answers: submissionData.answers
+        },
+        timestamp: new Date().toISOString(),
+        agentId: 'assessment-evaluator'
+      });
+
+      this.setState({ systemStatus: 'idle' });
+      return result;
+    } catch (error) {
+      console.error('[Agent Communication] Error evaluating assessment:', error);
+      this.setState({ systemStatus: 'error' });
+      throw error;
+    }
+  }
 }
 
 export const agentCommunicationService = new AgentCommunicationService();

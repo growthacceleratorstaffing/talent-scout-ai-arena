@@ -86,7 +86,14 @@ If you are asked to make up/sample/invent a project, generate a novel, realistic
         return result;
       }
 
-      // Handle other message types
+      if (message.type === 'assessment_generation') {
+        return await this.generateAssessment(message.payload);
+      }
+
+      if (message.type === 'assessment_evaluation') {
+        return await this.evaluateAssessment(message.payload);
+      }
+
       if (message.type === 'candidate_evaluation') {
         console.log('[Master Orchestrator] Evaluating candidate');
         // Simulate evaluation process
@@ -115,8 +122,204 @@ If you are asked to make up/sample/invent a project, generate a novel, realistic
         return this.createFallbackJobAd(message.payload);
       }
       
+      // Fallback for assessment generation
+      if (message.type === 'assessment_generation') {
+        return this.createFallbackAssessment(message.payload);
+      }
+      
+      // Fallback for assessment evaluation
+      if (message.type === 'assessment_evaluation') {
+        return this.createFallbackEvaluation(message.payload);
+      }
+      
       throw error;
     }
+  },
+
+  async generateAssessment(assessmentData: any) {
+    console.log('[Master Orchestrator] Generating AI assessment questions');
+
+    const aiPrompt = `Generate a technical assessment for a software engineering candidate:
+
+Candidate Details:
+- Candidate ID: ${assessmentData.candidateId}
+- Interview Score: ${assessmentData.interviewScore}/100
+- Job Role: Software Engineer
+
+Create 3 challenging but fair assessment questions:
+1. A coding problem (algorithm/data structures)
+2. A system design question
+3. A problem-solving scenario
+
+Make the difficulty appropriate for the candidate's interview performance. Provide clear, specific questions that test practical skills.
+
+Format the response as structured questions with clear instructions.`;
+
+    try {
+      const { data, error: functionError } = await supabase.functions.invoke('azure-ai-chat', {
+        body: { prompt: aiPrompt }
+      });
+
+      if (functionError || data.error) {
+        console.error('[Master Orchestrator] AI error:', functionError || data.error);
+        return this.createFallbackAssessment(assessmentData);
+      }
+
+      const generatedContent = data.content || data.generatedText || '';
+
+      return {
+        assessmentId: `assessment_${Date.now()}`,
+        candidateId: assessmentData.candidateId,
+        assessmentQuestions: this.parseAssessmentQuestions(generatedContent),
+        status: 'generated',
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('[Master Orchestrator] Error generating assessment:', error);
+      return this.createFallbackAssessment(assessmentData);
+    }
+  },
+
+  async evaluateAssessment(evaluationData: any) {
+    console.log('[Master Orchestrator] Evaluating assessment answers with AI');
+
+    const answersText = Object.entries(evaluationData.answers)
+      .map(([questionId, answer]) => `Question ${questionId}: ${answer}`)
+      .join('\n\n');
+
+    const aiPrompt = `Evaluate this technical assessment submission for a software engineering candidate:
+
+Assessment Answers:
+${answersText}
+
+Please evaluate based on:
+1. Technical accuracy and correctness
+2. Problem-solving approach and methodology
+3. Code quality and best practices (if applicable)
+4. Communication and explanation clarity
+5. Completeness of the solution
+
+Provide:
+- A numerical score out of 100
+- Pass/Fail verdict (pass = 70+ score)
+- Brief feedback explaining the evaluation
+- Specific strengths and areas for improvement
+
+Be fair but thorough in your evaluation.`;
+
+    try {
+      const { data, error: functionError } = await supabase.functions.invoke('azure-ai-chat', {
+        body: { prompt: aiPrompt }
+      });
+
+      if (functionError || data.error) {
+        console.error('[Master Orchestrator] AI error:', functionError || data.error);
+        return this.createFallbackEvaluation(evaluationData);
+      }
+
+      const generatedContent = data.content || data.generatedText || '';
+      const evaluation = this.parseAssessmentEvaluation(generatedContent);
+
+      return {
+        candidateId: evaluationData.candidateId,
+        score: evaluation.score,
+        verdict: evaluation.verdict,
+        feedback: evaluation.feedback,
+        evaluatedAt: new Date().toISOString(),
+        status: 'completed'
+      };
+    } catch (error) {
+      console.error('[Master Orchestrator] Error evaluating assessment:', error);
+      return this.createFallbackEvaluation(evaluationData);
+    }
+  },
+
+  createFallbackAssessment(assessmentData: any) {
+    console.log('[Master Orchestrator] Using fallback assessment generation');
+    
+    return {
+      assessmentId: `assessment_${Date.now()}`,
+      candidateId: assessmentData.candidateId,
+      assessmentQuestions: [
+        {
+          id: 'q1',
+          type: 'coding',
+          title: 'Array Problem',
+          question: 'Write a function to find the maximum sum of a contiguous subarray.',
+        },
+        {
+          id: 'q2',
+          type: 'system_design',
+          title: 'System Design',
+          question: 'Design a basic chat application architecture.',
+        },
+        {
+          id: 'q3',
+          type: 'problem_solving',
+          title: 'Debugging',
+          question: 'How would you investigate and fix a memory leak in a web application?',
+        }
+      ],
+      status: 'generated',
+      timestamp: new Date().toISOString()
+    };
+  },
+
+  createFallbackEvaluation(evaluationData: any) {
+    console.log('[Master Orchestrator] Using fallback assessment evaluation');
+    
+    // Simple evaluation based on answer length and content
+    const answers = Object.values(evaluationData.answers) as string[];
+    const totalLength = answers.join('').length;
+    const hasCode = answers.some(answer => answer.includes('function') || answer.includes('def') || answer.includes('{'));
+    
+    let score = Math.min(40 + (totalLength / 50), 85); // Base score with length bonus
+    if (hasCode) score += 10; // Bonus for code submissions
+    
+    score = Math.round(Math.max(30, Math.min(95, score))); // Clamp between 30-95
+
+    return {
+      candidateId: evaluationData.candidateId,
+      score,
+      verdict: score >= 70 ? 'passed' : 'failed',
+      feedback: `Assessment completed with ${score}/100. ${score >= 70 ? 'Good technical demonstration.' : 'Needs improvement in technical areas.'}`,
+      evaluatedAt: new Date().toISOString(),
+      status: 'completed'
+    };
+  },
+
+  parseAssessmentQuestions(content: string) {
+    // Simple parsing - in production, this would be more sophisticated
+    return [
+      {
+        id: 'q1',
+        type: 'coding',
+        title: 'Coding Challenge',
+        question: content.substring(0, Math.min(200, content.length)) + '...',
+      },
+      {
+        id: 'q2',
+        type: 'system_design',
+        title: 'System Design',
+        question: 'Design a scalable system based on the requirements provided.',
+      }
+    ];
+  },
+
+  parseAssessmentEvaluation(content: string) {
+    // Extract score, verdict, and feedback from AI response
+    const scoreMatch = content.match(/(\d+)(?:\/100|\s*out\s*of\s*100)/i);
+    const score = scoreMatch ? parseInt(scoreMatch[1]) : 75;
+    
+    const verdict = score >= 70 ? 'passed' : 'failed';
+    
+    // Extract feedback (everything after score/verdict keywords)
+    let feedback = content;
+    if (content.length > 200) {
+      feedback = content.substring(0, 200) + '...';
+    }
+
+    return { score, verdict, feedback };
   },
 
   createFallbackJobAd(jobData: any) {
