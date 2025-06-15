@@ -35,16 +35,45 @@ class AgentCommunicationService {
       const cleanedJobs = this.cleanUpJobAds([]);
       console.log('[Agent Communication] Jobs loaded from Supabase (expected initial):', cleanedJobs);
 
+      // Add some mock candidates who have passed AI interview for demonstration
+      const mockPassedCandidates = [
+        {
+          candidateId: 'candidate-001',
+          candidateName: 'Sarah Johnson',
+          recommendation: 'recommend',
+          score: 85,
+          jobId: 'job-001',
+          interviewCompleted: true
+        },
+        {
+          candidateId: 'candidate-002', 
+          candidateName: 'Mike Chen',
+          recommendation: 'recommend',
+          score: 78,
+          jobId: 'job-001',
+          interviewCompleted: true
+        },
+        {
+          candidateId: 'candidate-003',
+          candidateName: 'Emma Davis', 
+          recommendation: 'recommend',
+          score: 92,
+          jobId: 'job-002',
+          interviewCompleted: true
+        }
+      ];
+
       this.setState({
         systemStatus: 'idle',
         evaluationResults: [
           ...supabaseAgentService.getRecommendedCandidates(),
-          ...supabaseAgentService.getNonRecommendedCandidates()
+          ...supabaseAgentService.getNonRecommendedCandidates(),
+          ...mockPassedCandidates
         ],
         activeJobs: cleanedJobs
       });
       
-      console.log('[Agent Communication] Initialized with real Supabase data');
+      console.log('[Agent Communication] Initialized with real Supabase data and mock passed candidates');
       console.log('Recommended candidates:', supabaseAgentService.getRecommendedCandidates().length);
       console.log('Non-recommended candidates:', supabaseAgentService.getNonRecommendedCandidates().length);
       console.log('[Agent Communication] State after Supabase load:', this.state);
@@ -231,7 +260,12 @@ class AgentCommunicationService {
   }
 
   getRecommendedCandidates() {
-    return supabaseAgentService.getRecommendedCandidates();
+    // Combine real Supabase candidates with mock passed candidates
+    const supabaseCandidates = supabaseAgentService.getRecommendedCandidates();
+    const mockPassedCandidates = this.state.evaluationResults.filter(candidate => 
+      candidate.candidateId && candidate.candidateId.startsWith('candidate-') && candidate.recommendation === 'recommend'
+    );
+    return [...supabaseCandidates, ...mockPassedCandidates];
   }
 
   getNonRecommendedCandidates() {
