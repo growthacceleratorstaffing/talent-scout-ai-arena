@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Sparkles, Plus, Eye, Edit, Trash2, Bot, Zap } from "lucide-react";
+import { Sparkles, Plus, Eye, Edit, Trash2, Bot, Zap, Brain, Users, MessageSquare, ClipboardCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAgentState } from "@/hooks/useAgentState";
 import Navigation from "@/components/Navigation";
@@ -255,15 +256,15 @@ const Ads = () => {
               </CardContent>
             </Card>
 
-            {/* Agent Architecture Status */}
+            {/* Enhanced Agent Architecture Status */}
             <Card className="shadow-lg border-0 bg-white/80 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-xl">
                   <Zap className="h-6 w-6 text-orange-600" />
-                  AI Agent Architecture
+                  Multi-Agent AI Architecture
                 </CardTitle>
                 <CardDescription>
-                  Multi-agent system orchestration with Azure AI Foundry
+                  End-to-end recruitment automation with Azure AI Foundry
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -273,7 +274,7 @@ const Ads = () => {
                       <Bot className="h-4 w-4 text-blue-600" />
                       <span className="font-semibold text-blue-900">Master Orchestrator</span>
                     </div>
-                    <p className="text-sm text-blue-700">Coordinates all agent activities and LinkedIn API interactions</p>
+                    <p className="text-sm text-blue-700">Coordinates all agent activities, API integrations, and workflow orchestration</p>
                   </div>
                   
                   <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
@@ -281,23 +282,59 @@ const Ads = () => {
                       <Sparkles className="h-4 w-4 text-purple-600" />
                       <span className="font-semibold text-purple-900">Job Generator Agent</span>
                     </div>
-                    <p className="text-sm text-purple-700">Creates compelling job advertisements using AI</p>
+                    <p className="text-sm text-purple-700">Creates compelling job advertisements with AI-enhanced content and project examples</p>
                   </div>
                   
                   <div className="p-3 bg-green-50 rounded-lg border border-green-200">
                     <div className="flex items-center gap-2 mb-1">
-                      <Eye className="h-4 w-4 text-green-600" />
-                      <span className="font-semibold text-green-900">Candidate Evaluator</span>
+                      <MessageSquare className="h-4 w-4 text-green-600" />
+                      <span className="font-semibold text-green-900">AI Interview Agent</span>
                     </div>
-                    <p className="text-sm text-green-700">Analyzes and scores candidate applications automatically</p>
+                    <p className="text-sm text-green-700">Conducts intelligent candidate interviews with dynamic questioning and evaluation</p>
+                  </div>
+
+                  <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                    <div className="flex items-center gap-2 mb-1">
+                      <ClipboardCheck className="h-4 w-4 text-amber-600" />
+                      <span className="font-semibold text-amber-900">Assessment Generator</span>
+                    </div>
+                    <p className="text-sm text-amber-700">Creates personalized technical assessments based on candidate performance</p>
+                  </div>
+                  
+                  <div className="p-3 bg-rose-50 rounded-lg border border-rose-200">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Brain className="h-4 w-4 text-rose-600" />
+                      <span className="font-semibold text-rose-900">Candidate Evaluator</span>
+                    </div>
+                    <p className="text-sm text-rose-700">Analyzes and scores candidates across interview and assessment phases</p>
+                  </div>
+
+                  <div className="p-3 bg-cyan-50 rounded-lg border border-cyan-200">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Users className="h-4 w-4 text-cyan-600" />
+                      <span className="font-semibold text-cyan-900">LinkedIn Integration</span>
+                    </div>
+                    <p className="text-sm text-cyan-700">Automates job posting and candidate sourcing via LinkedIn Developer API</p>
                   </div>
                 </div>
                 
-                <div className="text-xs text-gray-500 space-y-1 pt-2 border-t">
-                  <p>• Real-time message queue communication</p>
-                  <p>• Azure AI Foundry model integration</p>
-                  <p>• LinkedIn Developer API connectivity</p>
-                  <p>• Automated candidate evaluation pipeline</p>
+                <div className="text-xs text-gray-500 space-y-1 pt-3 border-t">
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                    <p>Real-time agent communication via message queues</p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                    <p>Azure OpenAI GPT-4 model integration</p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
+                    <p>Automated candidate pipeline management</p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+                    <p>Dynamic assessment generation & evaluation</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
