@@ -1,3 +1,4 @@
+import { supabase } from '@/integrations/supabase/client';
 import { supabaseAgentService } from './supabaseAgentService';
 import { cleanJobDescription } from '@/utils/cleanJobDescription';
 
@@ -154,19 +155,16 @@ class AgentCommunicationService {
       // Post to LinkedIn after generation
       try {
         console.log('[Agent Communication] Posting job ad to LinkedIn...');
-        const resp = await fetch('/functions/v1/linkedin-post-job', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
+        const { data: linkedInResult, error: linkedInError } = await supabase.functions.invoke('linkedin-post-job', {
+          body: {
             jobAd: formattedJobAd
-          })
+          }
         });
-        const linkedInResult = await resp.json();
-        if (!resp.ok || !linkedInResult.success) {
-          throw new Error(linkedInResult.error || 'Unknown error posting to LinkedIn');
+        
+        if (linkedInError || !linkedInResult?.success) {
+          throw new Error(linkedInResult?.error || linkedInError?.message || 'Unknown error posting to LinkedIn');
         }
+        
         console.log('[Agent Communication] Job ad posted to LinkedIn:', linkedInResult);
         formattedJobAd.linkedInPostId = linkedInResult.linkedInResponse?.id || formattedJobAd.linkedInPostId;
       } catch (err) {

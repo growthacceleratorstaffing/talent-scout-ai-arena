@@ -1,4 +1,5 @@
 import { AgentMessage } from '../types/agent';
+import { supabase } from '@/integrations/supabase/client';
 
 // Helper: Detect "make up a project" intent and insert creative project generation into the AI prompt.
 function enhancePromptForProjectInstructions(originalPrompt: string, jobData: any) {
@@ -48,28 +49,27 @@ If you are asked to make up/sample/invent a project, generate a novel, realistic
         // Enhance if the user prompt specifically asks for a "project"
         aiPrompt = enhancePromptForProjectInstructions(aiPrompt, jobData);
 
-        // Call Azure AI via the Supabase Edge Function (be sure endpoint matches your function path)
-        const response = await fetch('/functions/v1/azure-ai-chat', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            prompt: aiPrompt,
-            model: 'gpt-4o'
-          })
+        // Call Azure AI via the Supabase Edge Function
+        console.log('[Master Orchestrator] Calling azure-ai-chat function...');
+        
+        const { data, error: functionError } = await supabase.functions.invoke('azure-ai-chat', {
+          body: { prompt: aiPrompt }
         });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Azure AI API error:', response.status, errorText);
+        if (functionError) {
+          console.error('[Master Orchestrator] Function error:', functionError);
           // Fallback to structured manual creation
           return this.createFallbackJobAd(jobData);
         }
 
-        const aiResult = await response.json();
+        if (data.error) {
+          console.error('[Master Orchestrator] API error:', data.error);
+          // Fallback to structured manual creation
+          return this.createFallbackJobAd(jobData);
+        }
+
         // Accept content from possible AI schema differences
-        const generatedContent = aiResult.choices?.[0]?.message?.content || aiResult.content || aiResult.generatedText || '';
+        const generatedContent = data.content || data.generatedText || '';
 
         // Parse the AI response into structured data
         const jobAd = this.parseAIJobResponse(generatedContent, jobData);
