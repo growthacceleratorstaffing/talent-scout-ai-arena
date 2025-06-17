@@ -8,11 +8,17 @@ require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Enable CORS
-app.use(cors());
+// Enable CORS with specific configuration for Azure
+app.use(cors({
+  origin: ['https://ga-app.azurewebsites.net', 'http://localhost:3000', 'http://localhost:5173'],
+  credentials: true
+}));
 
 // Enable compression
 app.use(compression());
+
+// Parse JSON bodies
+app.use(express.json());
 
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, 'dist')));
@@ -42,13 +48,13 @@ app.get('/health', async (req, res) => {
     
     if (supabaseUrl && supabaseKey) {
       try {
-        // Test Supabase connection with a timeout
+        // Test Supabase connection with a timeout - only if we have the dependency
         const { createClient } = require('@supabase/supabase-js');
         const supabase = createClient(supabaseUrl, supabaseKey);
         
         // Simple auth check with timeout
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Supabase timeout')), 5000)
+          setTimeout(() => reject(new Error('Supabase timeout')), 3000)
         );
         
         const healthCheckPromise = supabase.auth.getUser();
@@ -122,16 +128,45 @@ app.get('/api/monitoring/metrics', async (req, res) => {
   }
 });
 
+// API routes should go before the catchall
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
 // The "catchall" handler: for any request that doesn't
 // match one above, send back React's index.html file.
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist/index.html'));
+  try {
+    const indexPath = path.join(__dirname, 'dist/index.html');
+    res.sendFile(indexPath);
+  } catch (error) {
+    console.error('Error serving index.html:', error);
+    res.status(500).send('Internal Server Error');
+  }
 });
 
-app.listen(port, () => {
+// Error handling middleware
+app.use((error, req, res, next) => {
+  console.error('Server error:', error);
+  res.status(500).json({ 
+    error: 'Internal Server Error',
+    message: error.message 
+  });
+});
+
+const server = app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
   console.log('Environment check:');
   console.log('- SUPABASE_URL:', !!(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL));
   console.log('- SUPABASE_ANON_KEY:', !!(process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY));
   console.log('- NODE_ENV:', process.env.NODE_ENV || 'not set');
+  console.log('- Static files served from:', path.join(__dirname, 'dist'));
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    console.log('Process terminated');
+  });
 });
