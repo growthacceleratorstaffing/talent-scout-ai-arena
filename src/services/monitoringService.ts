@@ -21,7 +21,9 @@ export interface MonitoringLog {
 
 class MonitoringService {
   private metrics: HealthMetrics[] = [];
+  private logs: MonitoringLog[] = [];
   private maxMetricsHistory = 100;
+  private maxLogsHistory = 200;
 
   async logEvent(log: Omit<MonitoringLog, 'timestamp'>) {
     const logEntry: MonitoringLog = {
@@ -31,19 +33,11 @@ class MonitoringService {
 
     // Store in local array for quick access
     console.log(`[${logEntry.level.toUpperCase()}] ${logEntry.service}: ${logEntry.message}`, logEntry.metadata);
-
-    // Attempt to store in Supabase (non-blocking)
-    try {
-      await supabase.from('monitoring_logs').insert([{
-        timestamp: logEntry.timestamp,
-        level: logEntry.level,
-        service: logEntry.service,
-        message: logEntry.message,
-        metadata: logEntry.metadata || {},
-        auto_corrected: logEntry.auto_corrected || false
-      }]);
-    } catch (error) {
-      console.warn('Failed to store monitoring log:', error);
+    
+    // Store locally since we don't have monitoring_logs table yet
+    this.logs.push(logEntry);
+    if (this.logs.length > this.maxLogsHistory) {
+      this.logs = this.logs.slice(-this.maxLogsHistory);
     }
   }
 
@@ -143,19 +137,8 @@ class MonitoringService {
   }
 
   async getRecentLogs(limit = 50): Promise<MonitoringLog[]> {
-    try {
-      const { data, error } = await supabase
-        .from('monitoring_logs')
-        .select('*')
-        .order('timestamp', { ascending: false })
-        .limit(limit);
-
-      if (error) throw error;
-      return data || [];
-    } catch (error) {
-      console.warn('Failed to fetch monitoring logs:', error);
-      return [];
-    }
+    // Return local logs since we don't have a database table yet
+    return this.logs.slice(-limit).reverse();
   }
 
   startAutoMonitoring(intervalMs = 60000) {
