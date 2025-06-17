@@ -32,25 +32,65 @@ jobs:
           npm install
           npm run build --if-present
 
-      - name: Create deployment package
+      - name: Create deployment artifact
         run: |
-          # Clean up and prepare for deployment
-          rm -rf node_modules/.cache
-          rm -rf .git
-          rm -rf .github
-          # Create a clean package with only necessary files
-          mkdir -p deploy-package
-          cp -r dist deploy-package/
-          cp server.js deploy-package/
-          cp package*.json deploy-package/
-          cd deploy-package
-          zip -r ../release.zip . -x "*.git*" "*.github*" "*node_modules/.cache*"
+          # Create a clean deployment directory
+          mkdir deployment
+          
+          # Copy only the necessary files for production
+          cp -r dist deployment/
+          cp server.js deployment/
+          cp package.json deployment/
+          cp package-lock.json deployment/
+          
+          # Create a simple web.config for Azure
+          cat > deployment/web.config << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <system.webServer>
+              <handlers>
+                <add name="iisnode" path="server.js" verb="*" modules="iisnode"/>
+              </handlers>
+              <rewrite>
+                <rules>
+                  <rule name="DynamicContent">
+                    <conditions>
+                      <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="True"/>
+                    </conditions>
+                    <action type="Rewrite" url="server.js"/>
+                  </rule>
+                </rules>
+              </rewrite>
+              <iisnode 
+                node_env="production"
+                nodeProcessCountPerApplication="1"
+                maxConcurrentRequestsPerProcess="1024"
+                maxNamedPipeConnectionRetry="3"
+                namedPipeConnectionTimeout="30000"
+                maxNamedPipeConnectionPoolSize="512"
+                maxNamedPipePooledConnectionAge="30000"
+                asyncCompletionThreadCount="0"
+                initialRequestBufferSize="4096"
+                maxRequestBufferSize="65536"
+                watchedFiles="*.js"
+                uncFileChangesPollingInterval="5000"
+                gracefulShutdownTimeout="60000"
+                loggingEnabled="false"
+                debuggingEnabled="false"
+                devErrorsEnabled="false"
+                flushResponse="false"
+                enableXFF="false"
+                promoteServerVars=""
+              />
+            </system.webServer>
+          </configuration>
+          EOF
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: release.zip
+          path: deployment
 
   deploy:
     runs-on: ubuntu-latest
@@ -64,9 +104,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: node-app
-
-      - name: Unzip artifact for deployment
-        run: unzip release.zip
+          path: .
       
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
@@ -85,4 +123,3 @@ jobs:
           VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvdWxzdW1lcGpmaWhxb3d6aGVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg4Nzk3ODgsImV4cCI6MjA2NDQ1NTc4OH0.IewqiemFwcu74Y8Gla-XJUMiQp-ym8J-i0niylIVK2A
           NODE_ENV: production
           PORT: 8080
-
