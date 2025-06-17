@@ -14,7 +14,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -24,26 +24,44 @@ jobs:
         with:
           node-version: '20.x'
 
-      - name: npm install, build, and test
+      - name: Install dependencies and build
         env:
           VITE_SUPABASE_URL: https://doulsumepjfihqowzheq.supabase.co
           VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvdWxzdW1lcGpmaWhxb3d6aGVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg4Nzk3ODgsImV4cCI6MjA2NDQ1NTc4OH0.IewqiemFwcu74Y8Gla-XJUMiQp-ym8J-i0niylIVK2A
         run: |
-          npm install
-          npm run build --if-present
+          npm ci
+          npm run build
 
-      - name: Create deployment artifact
+      - name: Install production dependencies
         run: |
-          # Create a clean deployment directory
-          mkdir deployment
+          # Install only production dependencies for the server
+          npm ci --omit=dev
+
+      - name: Create deployment package
+        run: |
+          # Create deployment directory
+          mkdir -p deployment
           
-          # Copy only the necessary files for production
+          # Copy built application
           cp -r dist deployment/
+          
+          # Copy server files
           cp server.js deployment/
           cp package.json deployment/
           cp package-lock.json deployment/
           
-          # Create a simple web.config for Azure
+          # Copy production node_modules
+          cp -r node_modules deployment/
+          
+          # Create startup script for Azure
+          cat > deployment/startup.sh << 'EOF'
+          #!/bin/bash
+          cd /home/site/wwwroot
+          npm start
+          EOF
+          chmod +x deployment/startup.sh
+          
+          # Create web.config for Azure App Service
           cat > deployment/web.config << 'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <configuration>
@@ -53,6 +71,9 @@ jobs:
               </handlers>
               <rewrite>
                 <rules>
+                  <rule name="StaticContent">
+                    <action type="Rewrite" url="dist{REQUEST_URI}"/>
+                  </rule>
                   <rule name="DynamicContent">
                     <conditions>
                       <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="True"/>
@@ -65,22 +86,9 @@ jobs:
                 node_env="production"
                 nodeProcessCountPerApplication="1"
                 maxConcurrentRequestsPerProcess="1024"
-                maxNamedPipeConnectionRetry="3"
-                namedPipeConnectionTimeout="30000"
-                maxNamedPipeConnectionPoolSize="512"
-                maxNamedPipePooledConnectionAge="30000"
-                asyncCompletionThreadCount="0"
-                initialRequestBufferSize="4096"
-                maxRequestBufferSize="65536"
-                watchedFiles="*.js"
-                uncFileChangesPollingInterval="5000"
-                gracefulShutdownTimeout="60000"
-                loggingEnabled="false"
-                debuggingEnabled="false"
+                watchedFiles="server.js"
+                loggingEnabled="true"
                 devErrorsEnabled="false"
-                flushResponse="false"
-                enableXFF="false"
-                promoteServerVars=""
               />
             </system.webServer>
           </configuration>
@@ -114,8 +122,6 @@ jobs:
           slot-name: 'Production'
           package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_0BF8A2FE838248BC9D4FD17494AE3A97 }}
-          clean: true
-          restart: true
         env:
           SUPABASE_URL: https://doulsumepjfihqowzheq.supabase.co
           SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvdWxzdW1lcGpmaWhxb3d6aGVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg4Nzk3ODgsImV4cCI6MjA2NDQ1NTc4OH0.IewqiemFwcu74Y8Gla-XJUMiQp-ym8J-i0niylIVK2A
@@ -123,3 +129,4 @@ jobs:
           VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRvdWxzdW1lcGpmaWhxb3d6aGVxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg4Nzk3ODgsImV4cCI6MjA2NDQ1NTc4OH0.IewqiemFwcu74Y8Gla-XJUMiQp-ym8J-i0niylIVK2A
           NODE_ENV: production
           PORT: 8080
+          WEBSITE_NODE_DEFAULT_VERSION: 20.x

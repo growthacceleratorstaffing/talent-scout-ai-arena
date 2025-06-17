@@ -7,13 +7,13 @@ const compression = require('compression');
 const app = express();
 const port = process.env.PORT || 8080;
 
-console.log('🚀 Starting server...');
-console.log('📊 Environment:', process.env.NODE_ENV || 'development');
+console.log('🚀 Starting GA-App server...');
+console.log('📊 Environment:', process.env.NODE_ENV || 'production');
 console.log('🔌 Port:', port);
 
-// Enable CORS with specific configuration
+// Enable CORS
 app.use(cors({
-  origin: ['https://ga-app.azurewebsites.net', 'http://localhost:3000', 'http://localhost:5173', 'http://localhost:8080'],
+  origin: ['https://ga-app.azurewebsites.net', 'http://localhost:3000', 'http://localhost:5173'],
   credentials: true
 }));
 
@@ -24,33 +24,29 @@ app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Serve static files from the React app
-const staticPath = path.join(__dirname, 'dist');
-console.log('📁 Serving static files from:', staticPath);
-
-app.use(express.static(staticPath, {
-  maxAge: '1d',
-  etag: false,
-  index: false // Don't auto-serve index.html for static routes
-}));
-
-// Azure health check endpoint - must be very simple and reliable
+// Health check endpoint for Azure
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
     uptime: Math.floor(process.uptime()),
-    port: port
+    port: port,
+    env: process.env.NODE_ENV || 'production'
   });
 });
 
-// Additional health endpoints for Azure monitoring
+// Additional health endpoints
 app.get('/robots.txt', (req, res) => {
   res.type('text/plain').send('User-agent: *\nDisallow:');
 });
 
 app.get('/favicon.ico', (req, res) => {
-  res.status(204).end();
+  const faviconPath = path.join(__dirname, 'dist', 'favicon.ico');
+  res.sendFile(faviconPath, (err) => {
+    if (err) {
+      res.status(204).end();
+    }
+  });
 });
 
 // API routes
@@ -87,14 +83,25 @@ app.get('/api/monitoring/metrics', (req, res) => {
   }
 });
 
-// The "catchall" handler: for any request that doesn't match above, send back React's index.html file
+// Serve static files from the React app
+const staticPath = path.join(__dirname, 'dist');
+console.log('📁 Serving static files from:', staticPath);
+
+app.use(express.static(staticPath, {
+  maxAge: '1d',
+  etag: false
+}));
+
+// The "catchall" handler: send back React's index.html file for any request that doesn't match above
 app.get('*', (req, res) => {
   try {
     const indexPath = path.join(__dirname, 'dist', 'index.html');
+    console.log('🔄 Serving index.html for route:', req.path);
+    
     res.sendFile(indexPath, (err) => {
       if (err) {
         console.error('❌ Error serving index.html:', err);
-        res.status(500).send('Internal Server Error');
+        res.status(500).send('Internal Server Error - Could not serve application');
       }
     });
   } catch (error) {
@@ -112,9 +119,9 @@ app.use((error, req, res, next) => {
   });
 });
 
-// Start server on all interfaces for Azure
-const server = app.listen(port, '0.0.0.0', () => {
-  console.log('✅ Server is running on port', port);
+// Start server
+const server = app.listen(port, () => {
+  console.log('✅ GA-App server is running on port', port);
   console.log('🔧 Environment check:');
   console.log('   - SUPABASE_URL:', !!(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL));
   console.log('   - SUPABASE_ANON_KEY:', !!(process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY));
@@ -140,7 +147,6 @@ const shutdown = (signal) => {
     process.exit(0);
   });
   
-  // Force shutdown after 10 seconds
   setTimeout(() => {
     console.error('❌ Forced shutdown');
     process.exit(1);
