@@ -23,88 +23,61 @@ app.use(express.json());
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// Simple health check endpoint for Azure
+// Simple health check endpoint for Azure - this must be very reliable
 app.get('/health', async (req, res) => {
-  const startTime = Date.now();
-  const health = {
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    services: {},
-    responseTime: null,
-    environment: process.env.NODE_ENV || 'production',
-    autoCorrections: []
-  };
-
   try {
-    // Check basic server health first
-    health.services.server = 'connected';
+    // Basic health response that Azure expects
+    const health = {
+      status: 'OK',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: process.env.NODE_ENV || 'production'
+    };
     
-    // Check if we're in Azure (basic environment check)
-    health.services.environment = 'connected';
-    
-    // Only check Supabase if environment variables are available
-    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
-    
-    if (supabaseUrl && supabaseKey) {
-      try {
-        // Test Supabase connection with a timeout - only if we have the dependency
-        const { createClient } = require('@supabase/supabase-js');
-        const supabase = createClient(supabaseUrl, supabaseKey);
-        
-        // Simple auth check with timeout
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Supabase timeout')), 3000)
-        );
-        
-        const healthCheckPromise = supabase.auth.getUser();
-        
-        await Promise.race([healthCheckPromise, timeoutPromise]);
-        health.services.supabase = 'connected';
-      } catch (supabaseError) {
-        health.services.supabase = 'degraded';
-        console.warn('Supabase connection warning:', supabaseError.message);
-        // Don't fail the entire health check for Supabase issues
-      }
-    } else {
-      health.services.supabase = 'not_configured';
-      console.log('Supabase not configured - using local mode');
-    }
-
-    // Check server performance
-    const responseTime = Date.now() - startTime;
-    health.responseTime = `${responseTime}ms`;
-    
-    if (responseTime > 2000) {
-      health.services.performance = 'degraded';
-    } else {
-      health.services.performance = 'connected';
-    }
-
-    // Memory usage check
-    const memUsage = process.memoryUsage();
-    const memUsageMB = Math.round(memUsage.heapUsed / 1024 / 1024);
-    health.services.memory = memUsageMB > 500 ? 'degraded' : 'connected';
-    
-    // Always return 200 OK for Azure health checks unless there's a critical server error
+    // Always return 200 OK for Azure health checks
     res.status(200).json(health);
   } catch (error) {
     console.error('Health check error:', error);
-    // Even on error, return 200 with error details for debugging
+    // Even on error, return 200 with error details for Azure compatibility
     res.status(200).json({
-      status: 'DEGRADED',
+      status: 'ERROR',
       timestamp: new Date().toISOString(),
-      error: error.message,
-      responseTime: `${Date.now() - startTime}ms`,
-      services: {
-        server: 'connected',
-        error_details: error.message
-      }
+      error: error.message
     });
   }
 });
 
-// Monitoring endpoint for detailed metrics
+// Alternative health endpoints that Azure might check
+app.get('/', (req, res) => {
+  // Check if this is a health check request (no user agent or specific headers)
+  const userAgent = req.get('User-Agent') || '';
+  const isHealthCheck = userAgent.includes('HealthCheck') || userAgent.includes('AlwaysOn');
+  
+  if (isHealthCheck) {
+    return res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
+  }
+  
+  // Regular request - serve the React app
+  try {
+    const indexPath = path.join(__dirname, 'dist/index.html');
+    res.sendFile(indexPath);
+  } catch (error) {
+    console.error('Error serving index.html:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// API routes
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    server: 'running',
+    port: port
+  });
+});
+
+// Detailed monitoring endpoint
 app.get('/api/monitoring/metrics', async (req, res) => {
   try {
     const metrics = {
@@ -122,15 +95,10 @@ app.get('/api/monitoring/metrics', async (req, res) => {
       }
     };
     
-    res.json(metrics);
+    res.status(200).json(metrics);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-});
-
-// API routes should go before the catchall
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
 // The "catchall" handler: for any request that doesn't
@@ -154,13 +122,14 @@ app.use((error, req, res, next) => {
   });
 });
 
-const server = app.listen(port, () => {
+const server = app.listen(port, '0.0.0.0', () => {
   console.log(`Server is running on port ${port}`);
   console.log('Environment check:');
   console.log('- SUPABASE_URL:', !!(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL));
   console.log('- SUPABASE_ANON_KEY:', !!(process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY));
   console.log('- NODE_ENV:', process.env.NODE_ENV || 'not set');
   console.log('- Static files served from:', path.join(__dirname, 'dist'));
+  console.log('- Server listening on all interfaces (0.0.0.0)');
 });
 
 // Graceful shutdown
@@ -169,4 +138,15 @@ process.on('SIGTERM', () => {
   server.close(() => {
     console.log('Process terminated');
   });
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
 });
