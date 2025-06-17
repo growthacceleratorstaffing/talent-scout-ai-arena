@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 export interface HealthMetrics {
   responseTime: number;
   timestamp: string;
-  services: Record<string, 'connected' | 'failed' | 'degraded'>;
+  services: Record<string, 'connected' | 'failed' | 'degraded' | 'not_configured'>;
   errors?: string[];
   autoCorrections?: string[];
 }
@@ -43,32 +43,49 @@ class MonitoringService {
 
   async checkServiceHealth(): Promise<HealthMetrics> {
     const startTime = performance.now();
-    const services: Record<string, 'connected' | 'failed' | 'degraded'> = {};
+    const services: Record<string, 'connected' | 'failed' | 'degraded' | 'not_configured'> = {};
     const errors: string[] = [];
     const autoCorrections: string[] = [];
 
-    // Check Supabase connectivity
+    // Check Supabase connectivity with better error handling
     try {
-      const { error } = await supabase.from('profiles').select('id').limit(1);
-      if (error) {
-        services.supabase = 'failed';
-        errors.push(`Supabase error: ${error.message}`);
-        
-        // Auto-correction: Try to reconnect
-        try {
-          await this.attemptSupabaseReconnection();
-          services.supabase = 'connected';
-          autoCorrections.push('Supabase reconnection successful');
-        } catch (reconnectError) {
-          await this.logEvent({
-            level: 'error',
-            service: 'supabase',
-            message: 'Failed to reconnect to Supabase',
-            metadata: { error: reconnectError }
-          });
-        }
+      // Check if we have the required environment variables
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        services.supabase = 'not_configured';
+        errors.push('Supabase environment variables not configured');
       } else {
-        services.supabase = 'connected';
+        // Test connection with timeout
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Connection timeout')), 5000)
+        );
+        
+        const healthCheckPromise = supabase.from('profiles').select('id').limit(1);
+        
+        const { error } = await Promise.race([healthCheckPromise, timeoutPromise]) as any;
+        
+        if (error) {
+          services.supabase = 'degraded';
+          errors.push(`Supabase query issue: ${error.message}`);
+          
+          // Auto-correction: Try alternative connection test
+          try {
+            await Promise.race([supabase.auth.getUser(), timeoutPromise]);
+            services.supabase = 'connected';
+            autoCorrections.push('Supabase connection recovered via auth check');
+          } catch (reconnectError) {
+            await this.logEvent({
+              level: 'error',
+              service: 'supabase',
+              message: 'Failed to recover Supabase connection',
+              metadata: { error: reconnectError }
+            });
+          }
+        } else {
+          services.supabase = 'connected';
+        }
       }
     } catch (error) {
       services.supabase = 'failed';
@@ -80,7 +97,7 @@ class MonitoringService {
     const missingEnvVars = requiredEnvVars.filter(envVar => !import.meta.env[envVar]);
     
     if (missingEnvVars.length > 0) {
-      services.environment = 'failed';
+      services.environment = 'not_configured';
       errors.push(`Missing environment variables: ${missingEnvVars.join(', ')}`);
     } else {
       services.environment = 'connected';
@@ -93,6 +110,23 @@ class MonitoringService {
       errors.push(`Slow response time: ${responseTime}ms`);
     } else {
       services.performance = 'connected';
+    }
+
+    // Check if we're running in production
+    try {
+      const response = await fetch('/health', { 
+        method: 'GET',
+        signal: AbortSignal.timeout(5000)
+      });
+      if (response.ok) {
+        services.server = 'connected';
+      } else {
+        services.server = 'degraded';
+        errors.push(`Server health check returned ${response.status}`);
+      }
+    } catch (serverError) {
+      services.server = 'degraded';
+      errors.push('Unable to reach server health endpoint');
     }
 
     const metrics: HealthMetrics = {
