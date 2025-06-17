@@ -32,37 +32,18 @@ jobs:
           npm ci
           npm run build
 
-      - name: Install production dependencies
+      - name: Create Azure deployment package
         run: |
-          # Install only production dependencies for the server
+          # Copy all necessary files to root directory for deployment
+          cp package.json ./
+          cp package-lock.json ./
+          cp server.js ./
+          
+          # Install production dependencies
           npm ci --omit=dev
-
-      - name: Create deployment package
-        run: |
-          # Create deployment directory
-          mkdir -p deployment
-          
-          # Copy built application
-          cp -r dist deployment/
-          
-          # Copy server files
-          cp server.js deployment/
-          cp package.json deployment/
-          cp package-lock.json deployment/
-          
-          # Copy production node_modules
-          cp -r node_modules deployment/
-          
-          # Create startup script for Azure
-          cat > deployment/startup.sh << 'EOF'
-          #!/bin/bash
-          cd /home/site/wwwroot
-          npm start
-          EOF
-          chmod +x deployment/startup.sh
           
           # Create web.config for Azure App Service
-          cat > deployment/web.config << 'EOF'
+          cat > web.config << 'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <configuration>
             <system.webServer>
@@ -98,7 +79,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: deployment
+          path: |
+            dist/
+            node_modules/
+            package.json
+            package-lock.json
+            server.js
+            web.config
 
   deploy:
     runs-on: ubuntu-latest
@@ -121,6 +108,8 @@ jobs:
           app-name: 'ga-app'
           slot-name: 'Production'
           package: .
+          clean: true
+          restart: true
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_0BF8A2FE838248BC9D4FD17494AE3A97 }}
         env:
           SUPABASE_URL: https://doulsumepjfihqowzheq.supabase.co
