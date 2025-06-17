@@ -17,6 +17,16 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Get the correct base URL for redirects
+const getBaseUrl = () => {
+  // Check if we're in Azure production
+  if (window.location.hostname === 'ga-app.azurewebsites.net') {
+    return 'https://ga-app.azurewebsites.net';
+  }
+  // Default to current origin for local/other environments
+  return window.location.origin;
+};
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -66,7 +76,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signUp = async (email: string, password: string, fullName?: string) => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = `${getBaseUrl()}/`;
       
       const { error } = await supabase.auth.signUp({
         email,
@@ -132,10 +142,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log('Starting LinkedIn OAuth flow...');
       console.log('Current URL:', window.location.href);
       
+      const redirectUrl = `${getBaseUrl()}/`;
+      
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: redirectUrl,
           scopes: 'openid profile email'
         }
       });
