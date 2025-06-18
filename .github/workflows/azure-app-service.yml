@@ -6,6 +6,8 @@ on:
     branches:
       - azure-app-service
   workflow_dispatch:
+    branches:
+      - azure-app-service
 
 jobs:
   build:
