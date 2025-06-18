@@ -18,6 +18,7 @@ import {
   Brain
 } from "lucide-react";
 import { Link } from 'react-router-dom';
+import MonitoringDashboard from '@/components/monitoring/MonitoringDashboard';
 
 const Index = () => {
   const stats = {
@@ -173,6 +174,22 @@ const Index = () => {
           </CardContent>
         </Card>
 
+        {/* System Health Monitoring */}
+        <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Brain className="h-6 w-6 text-blue-500" />
+              System Health & Monitoring
+            </CardTitle>
+            <CardDescription>
+              Real-time health checks and 24/7 uptime monitoring
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <MonitoringDashboard />
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* AI System Status */}
           <Card className="shadow-lg border-0 bg-gradient-to-br from-blue-50 to-blue-100 backdrop-blur-sm">
@@ -268,4 +285,3 @@ const Index = () => {
 };
 
 export default Index;
-
