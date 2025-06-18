@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle, CheckCircle, Clock, Zap, RefreshCw } from 'lucide-react';
 import { monitoringService, HealthMetrics, MonitoringLog } from '@/services/monitoringService';
 import { useToast } from '@/hooks/use-toast';
+import KeepAliveStatus from './KeepAliveStatus';
 
 const MonitoringDashboard = () => {
   const [metrics, setMetrics] = useState<HealthMetrics[]>([]);
@@ -101,7 +101,7 @@ const MonitoringDashboard = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">System Monitoring</h2>
-          <p className="text-muted-foreground">Real-time health checks and error correction</p>
+          <p className="text-muted-foreground">Real-time health checks and 24/7 uptime monitoring</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -119,54 +119,51 @@ const MonitoringDashboard = () => {
         </div>
       </div>
 
-      {latestMetrics && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Response Time</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{latestMetrics.responseTime}ms</div>
-              <p className="text-xs text-muted-foreground">Last health check</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Services Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {Object.values(latestMetrics.services).filter(s => s === 'connected').length}/
-                {Object.keys(latestMetrics.services).length}
-              </div>
-              <p className="text-xs text-muted-foreground">Services healthy</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Auto-Corrections</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{latestMetrics.autoCorrections?.length || 0}</div>
-              <p className="text-xs text-muted-foreground">Last check</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Last Updated</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-sm font-medium">
-                {new Date(latestMetrics.timestamp).toLocaleTimeString()}
-              </div>
-              <p className="text-xs text-muted-foreground">System time</p>
-            </CardContent>
-          </Card>
+      {/* Keep-Alive Status Widget */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-1">
+          <KeepAliveStatus />
         </div>
-      )}
+        
+        {latestMetrics && (
+          <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Response Time</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{latestMetrics.responseTime}ms</div>
+                <p className="text-xs text-muted-foreground">Last health check</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Services Status</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {Object.values(latestMetrics.services).filter(s => s === 'connected').length}/
+                  {Object.keys(latestMetrics.services).length}
+                </div>
+                <p className="text-xs text-muted-foreground">Services healthy</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Last Updated</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm font-medium">
+                  {new Date(latestMetrics.timestamp).toLocaleTimeString()}
+                </div>
+                <p className="text-xs text-muted-foreground">System time</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
 
       <Tabs defaultValue="services" className="space-y-4">
         <TabsList>
