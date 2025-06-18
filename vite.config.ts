@@ -6,7 +6,8 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: mode === 'production' ? (process.env.GITHUB_PAGES ? '/ga-app/' : '/') : '/',
+  // Use root path for Azure Static Web Apps and App Service, only use /ga-app/ for GitHub Pages
+  base: mode === 'production' && process.env.GITHUB_PAGES ? '/ga-app/' : '/',
   server: {
     host: "::",
     port: 8080,
