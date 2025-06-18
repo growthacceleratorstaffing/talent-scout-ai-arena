@@ -4,10 +4,8 @@ name: Build and Deploy to Azure App Service
 on:
   push:
     branches:
-      - azure-app-service
+      - main
   workflow_dispatch:
-    branches:
-      - azure-app-service
 
 jobs:
   build:
