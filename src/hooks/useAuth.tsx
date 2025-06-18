@@ -1,3 +1,4 @@
+
 import { useState, useEffect, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,6 +22,10 @@ const getBaseUrl = () => {
   // Check if we're on GitHub Pages
   if (window.location.hostname.includes('github.io')) {
     return window.location.origin + '/ga-app';
+  }
+  // Check if we're on Azure Static Web Apps
+  if (window.location.hostname.includes('azurestaticapps.net')) {
+    return window.location.origin;
   }
   // Check if we're in Azure production
   if (window.location.hostname === 'ga-app.azurewebsites.net') {
