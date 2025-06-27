@@ -16,7 +16,7 @@ const OptimizedMonitoringDashboard = memo(() => {
     staleTime: 30000, // Cache for 30 seconds
   });
 
-  const statusCards = useMemo(() => {
+  const statusCards = useMemo((): React.ReactNode => {
     if (!healthMetrics) return null;
 
     return Object.entries(healthMetrics.services).map(([service, status]) => (
