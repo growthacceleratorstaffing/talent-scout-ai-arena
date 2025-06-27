@@ -18,7 +18,7 @@ const OptimizedMonitoringDashboard = memo(() => {
   });
 
   const statusCards = useMemo(() => {
-    if (!healthMetrics) return [] as React.ReactElement[];
+    if (!healthMetrics?.services) return [];
 
     return Object.entries(healthMetrics.services).map(([service, status]) => (
       <div key={service} className="flex items-center justify-between p-3 border rounded-lg">
