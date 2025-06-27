@@ -12,12 +12,13 @@ const OptimizedMonitoringDashboard = memo(() => {
   const { data: healthMetrics, isLoading, refetch } = useQuery({
     queryKey: ['health-metrics'],
     queryFn: () => optimizedMonitoringService.checkServiceHealth(),
-    refetchInterval: 60000, // Reduced from 30s to 60s
-    staleTime: 30000, // Cache for 30 seconds
+    refetchInterval: 120000, // Increased from 60s to 2 minutes for cost efficiency
+    staleTime: 60000, // Increased cache time to 60 seconds
+    gcTime: 300000, // Keep in cache for 5 minutes
   });
 
-  const statusCards = useMemo((): JSX.Element[] => {
-    if (!healthMetrics) return [];
+  const statusCards = useMemo((): React.ReactNode => {
+    if (!healthMetrics) return null;
 
     return Object.entries(healthMetrics.services).map(([service, status]) => (
       <div key={service} className="flex items-center justify-between p-3 border rounded-lg">
@@ -43,7 +44,7 @@ const OptimizedMonitoringDashboard = memo(() => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">System Monitoring</h2>
-          <p className="text-muted-foreground">Optimized resource monitoring</p>
+          <p className="text-muted-foreground">Cost-optimized resource monitoring</p>
         </div>
         <Button onClick={() => refetch()} disabled={isLoading} size="sm">
           <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
@@ -90,11 +91,11 @@ const OptimizedMonitoringDashboard = memo(() => {
             <Brain className="h-6 w-6 text-blue-500" />
             Service Status
           </CardTitle>
-          <CardDescription>Current system health overview</CardDescription>
+          <CardDescription>Efficient system health overview</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {statusCards.length > 0 ? statusCards : <p className="text-muted-foreground">Loading service status...</p>}
+            {statusCards || <p className="text-muted-foreground">Loading service status...</p>}
           </div>
         </CardContent>
       </Card>

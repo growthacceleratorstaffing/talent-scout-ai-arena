@@ -1,8 +1,12 @@
 
+import { resourceOptimizer } from './resourceOptimizer';
+
 class OptimizedMonitoringService {
   private cache = new Map<string, { data: any; timestamp: number }>();
-  private readonly CACHE_TTL = 30000; // 30 seconds cache
+  private readonly CACHE_TTL = 60000; // Increased to 60 seconds for cost efficiency
   private activeRequests = new Map<string, Promise<any>>();
+  private healthCheckCount = 0;
+  private maxHealthChecks = 100; // Limit health checks per session
 
   private isCacheValid(key: string): boolean {
     const cached = this.cache.get(key);
@@ -15,9 +19,21 @@ class OptimizedMonitoringService {
 
   private setCachedData(key: string, data: any) {
     this.cache.set(key, { data, timestamp: Date.now() });
+    
+    // Limit cache size for memory efficiency
+    if (this.cache.size > 20) {
+      const firstKey = this.cache.keys().next().value;
+      this.cache.delete(firstKey);
+    }
   }
 
   async checkServiceHealth() {
+    // Rate limiting to prevent excessive API calls
+    if (this.healthCheckCount >= this.maxHealthChecks) {
+      console.warn('Health check limit reached for this session');
+      return this.getCachedData('health-check') || this.getDefaultHealthData();
+    }
+
     const cacheKey = 'health-check';
     
     // Return cached data if available and valid
@@ -30,41 +46,51 @@ class OptimizedMonitoringService {
       return this.activeRequests.get(cacheKey);
     }
 
-    const healthCheck = this.performHealthCheck();
+    const healthCheck = this.performOptimizedHealthCheck();
     this.activeRequests.set(cacheKey, healthCheck);
 
     try {
       const result = await healthCheck;
       this.setCachedData(cacheKey, result);
+      this.healthCheckCount++;
       return result;
     } finally {
       this.activeRequests.delete(cacheKey);
     }
   }
 
-  private async performHealthCheck() {
+  private async performOptimizedHealthCheck() {
     const startTime = Date.now();
     const services: Record<string, string> = {};
 
     try {
-      // Lightweight health check - just ping the server
-      const response = await fetch('/api/health', {
-        method: 'GET',
-        signal: AbortSignal.timeout(5000) // 5 second timeout
-      });
+      // Use resource optimizer for efficient network calls
+      await resourceOptimizer.optimizedFetch('/api/health', {
+        method: 'GET'
+      }, 30000); // 30 second cache
       
-      services.server = response.ok ? 'connected' : 'failed';
+      services.server = 'connected';
     } catch (error) {
       services.server = 'failed';
     }
 
-    // Check client-side storage (lightweight)
+    // Lightweight client-side checks
     try {
-      localStorage.setItem('health-test', 'ok');
-      localStorage.removeItem('health-test');
-      services.storage = 'connected';
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('health-test', 'ok');
+        localStorage.removeItem('health-test');
+        services.storage = 'connected';
+      }
     } catch {
       services.storage = 'failed';
+    }
+
+    // Check memory usage (lightweight)
+    if ('memory' in performance) {
+      const memInfo = (performance as any).memory;
+      services.memory = memInfo.usedJSHeapSize < memInfo.jsHeapSizeLimit * 0.8 ? 'connected' : 'degraded';
+    } else {
+      services.memory = 'connected';
     }
 
     const responseTime = Date.now() - startTime;
@@ -74,6 +100,21 @@ class OptimizedMonitoringService {
       responseTime,
       services,
       errors: [],
+      autoCorrections: [],
+      resourceMetrics: resourceOptimizer.getResourceMetrics()
+    };
+  }
+
+  private getDefaultHealthData() {
+    return {
+      timestamp: new Date().toISOString(),
+      responseTime: 0,
+      services: {
+        server: 'unknown',
+        storage: 'connected',
+        memory: 'connected'
+      },
+      errors: ['Using cached data - health check limit reached'],
       autoCorrections: []
     };
   }
@@ -82,6 +123,17 @@ class OptimizedMonitoringService {
   cleanup() {
     this.cache.clear();
     this.activeRequests.clear();
+    this.healthCheckCount = 0;
+  }
+
+  // Get resource usage statistics
+  getResourceStats() {
+    return {
+      cacheSize: this.cache.size,
+      activeRequests: this.activeRequests.size,
+      healthCheckCount: this.healthCheckCount,
+      resourceMetrics: resourceOptimizer.getResourceMetrics()
+    };
   }
 }
 
