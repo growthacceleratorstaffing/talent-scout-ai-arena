@@ -17,8 +17,8 @@ const OptimizedMonitoringDashboard = memo(() => {
     gcTime: 300000, // Keep in cache for 5 minutes
   });
 
-  const statusCards = useMemo((): React.ReactNode => {
-    if (!healthMetrics) return null;
+  const statusCards = useMemo((): JSX.Element[] => {
+    if (!healthMetrics) return [];
 
     return Object.entries(healthMetrics.services).map(([service, status]) => (
       <div key={service} className="flex items-center justify-between p-3 border rounded-lg">
@@ -95,7 +95,7 @@ const OptimizedMonitoringDashboard = memo(() => {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {statusCards || <p className="text-muted-foreground">Loading service status...</p>}
+            {statusCards.length > 0 ? statusCards : <p className="text-muted-foreground">Loading service status...</p>}
           </div>
         </CardContent>
       </Card>
