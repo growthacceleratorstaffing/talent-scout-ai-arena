@@ -2,7 +2,9 @@ class KeepAliveService {
   private intervalId: NodeJS.Timeout | null = null;
   private isActive = false;
   private readonly pingInterval = 5 * 60 * 1000; // 5 minutes
-  private readonly healthEndpoint = '/api/health';
+  private readonly healthEndpoint = '/api/keep-alive'; // Use lighter endpoint
+  private failedAttempts = 0;
+  private readonly maxFailedAttempts = 3;
 
   start() {
     if (this.isActive) {
@@ -10,18 +12,18 @@ class KeepAliveService {
       return;
     }
 
-    console.log('Starting keep-alive service...');
+    console.log('Starting optimized keep-alive service...');
     this.isActive = true;
 
-    // Immediate ping
+    // Immediate lightweight ping
     this.ping();
 
-    // Set up interval pinging
+    // Set up interval pinging with exponential backoff on failures
     this.intervalId = setInterval(() => {
       this.ping();
-    }, this.pingInterval);
+    }, this.getNextInterval());
 
-    // Keep browser tab active
+    // Optimized browser activity (less frequent)
     this.preventTabSleep();
   }
 
@@ -31,48 +33,67 @@ class KeepAliveService {
       this.intervalId = null;
     }
     this.isActive = false;
+    this.failedAttempts = 0;
     console.log('Keep-alive service stopped');
+  }
+
+  private getNextInterval(): number {
+    // Exponential backoff for failed attempts to reduce resource usage
+    if (this.failedAttempts > 0) {
+      return Math.min(this.pingInterval * Math.pow(2, this.failedAttempts), 15 * 60 * 1000); // Max 15 minutes
+    }
+    return this.pingInterval;
   }
 
   private async ping() {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // Shorter timeout
+
       const response = await fetch(this.healthEndpoint, {
         method: 'GET',
-        cache: 'no-cache'
+        cache: 'no-cache',
+        signal: controller.signal
       });
 
+      clearTimeout(timeoutId);
+
       if (response.ok) {
+        this.failedAttempts = 0; // Reset on success
         console.log('Keep-alive ping successful:', new Date().toISOString());
       } else {
-        console.warn('Keep-alive ping failed:', response.status);
+        this.handleFailure();
       }
     } catch (error) {
-      console.error('Keep-alive ping error:', error);
+      this.handleFailure();
+    }
+  }
+
+  private handleFailure() {
+    this.failedAttempts++;
+    console.warn(`Keep-alive ping failed (attempt ${this.failedAttempts}/${this.maxFailedAttempts})`);
+    
+    if (this.failedAttempts >= this.maxFailedAttempts) {
+      console.error('Keep-alive service disabled due to repeated failures');
+      this.stop();
     }
   }
 
   private preventTabSleep() {
-    // Prevent browser from sleeping by requesting a wake lock if available
-    if ('wakeLock' in navigator) {
-      (navigator as any).wakeLock.request('screen').catch((err: any) => {
-        console.log('Wake lock not available:', err);
-      });
-    }
-
-    // Fallback: tiny activity to keep tab alive
+    // More efficient tab keep-alive (every 2 minutes instead of 30 seconds)
     setInterval(() => {
-      // Minimal DOM activity to prevent tab sleeping
-      document.title = document.title.includes('●') 
-        ? document.title.replace('●', '') 
-        : document.title + '●';
+      // Minimal DOM activity
+      if (document.hidden) return; // Skip if tab is not visible
       
-      // Reset title after a second
+      const originalTitle = document.title;
+      document.title = originalTitle.includes('●') 
+        ? originalTitle.replace('●', '') 
+        : originalTitle + '●';
+      
       setTimeout(() => {
-        if (document.title.includes('●')) {
-          document.title = document.title.replace('●', '');
-        }
-      }, 1000);
-    }, 30000); // Every 30 seconds
+        document.title = originalTitle;
+      }, 500);
+    }, 2 * 60 * 1000); // Every 2 minutes
   }
 
   isRunning() {

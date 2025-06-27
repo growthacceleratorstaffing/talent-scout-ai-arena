@@ -6,174 +6,134 @@ const compression = require('compression');
 const app = express();
 const port = process.env.PORT || 8080;
 
-console.log('🚀 Starting GA-App server...');
+console.log('🚀 Starting optimized GA-App server...');
 console.log('📊 Environment:', process.env.NODE_ENV || 'production');
 console.log('🔌 Port:', port);
 
-// Enable CORS
+// Enable CORS with optimized settings
 app.use(cors({
   origin: ['https://ga-app.azurewebsites.net', 'http://localhost:3000', 'http://localhost:5173'],
-  credentials: true
+  credentials: true,
+  optionsSuccessStatus: 200 // For legacy browser support
 }));
 
-// Enable compression
-app.use(compression());
+// Enable compression for better performance
+app.use(compression({
+  level: 6, // Balance between compression and CPU usage
+  threshold: 1024 // Only compress files larger than 1KB
+}));
 
-// Parse JSON bodies
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Optimized body parsing
+app.use(express.json({ limit: '1mb' })); // Reduced from 10mb
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
-// Keep-alive ping counter
+// Lightweight metrics
 let pingCount = 0;
 let lastPing = new Date();
+let healthChecks = 0;
 
-// Health check endpoint for Azure
+// Optimized health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
-    uptime: Math.floor(process.uptime()),
-    port: port,
-    env: process.env.NODE_ENV || 'production'
+    uptime: Math.floor(process.uptime())
   });
 });
 
-// Additional health endpoints
+// Lightweight endpoints
 app.get('/robots.txt', (req, res) => {
   res.type('text/plain').send('User-agent: *\nDisallow:');
 });
 
 app.get('/favicon.ico', (req, res) => {
-  const faviconPath = path.join(__dirname, 'dist', 'favicon.ico');
-  res.sendFile(faviconPath, (err) => {
-    if (err) {
-      res.status(204).end();
-    }
-  });
+  res.status(204).end(); // No content response to save bandwidth
 });
 
-// API routes
+// Optimized API routes
 app.get('/api/health', (req, res) => {
-  pingCount++;
-  lastPing = new Date();
-  
+  healthChecks++;
   res.status(200).json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    server: 'running',
-    port: port,
-    pingCount: pingCount,
-    lastPing: lastPing.toISOString(),
-    uptime: Math.floor(process.uptime())
+    uptime: Math.floor(process.uptime()),
+    checks: healthChecks
   });
 });
 
-// Keep-alive endpoint - responds immediately to prevent cold starts
+// Ultra-lightweight keep-alive endpoint
 app.get('/api/keep-alive', (req, res) => {
   pingCount++;
   lastPing = new Date();
-  
   res.status(200).json({
     status: 'alive',
-    timestamp: new Date().toISOString(),
-    uptime: Math.floor(process.uptime()),
-    pingCount: pingCount
+    timestamp: lastPing.toISOString(),
+    count: pingCount
   });
 });
 
-// Monitoring endpoint
+// Simplified monitoring endpoint
 app.get('/api/monitoring/metrics', (req, res) => {
   try {
     const metrics = {
       timestamp: new Date().toISOString(),
       uptime: Math.floor(process.uptime()),
-      memory: process.memoryUsage(),
-      platform: process.platform,
-      nodeVersion: process.version,
-      environment: process.env.NODE_ENV || 'production',
+      memory: {
+        used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+        total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024)
+      },
       pingCount: pingCount,
-      lastPing: lastPing.toISOString(),
-      environmentVars: {
-        hasSupabaseUrl: !!(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL),
-        hasSupabaseKey: !!(process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY),
-        port: port
-      }
+      healthChecks: healthChecks
     };
     
     res.status(200).json(metrics);
   } catch (error) {
-    console.error('Metrics error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Serve static files from the React app
+// Serve static files with optimized caching
 const staticPath = path.join(__dirname, 'dist');
-console.log('📁 Serving static files from:', staticPath);
-
 app.use(express.static(staticPath, {
-  maxAge: '1d',
-  etag: false
+  maxAge: '7d', // Increased cache time
+  etag: true, // Enable ETags for better caching
+  lastModified: true
 }));
 
-// The "catchall" handler: send back React's index.html file for any request that doesn't match above
+// The "catchall" handler
 app.get('*', (req, res) => {
-  try {
-    const indexPath = path.join(__dirname, 'dist', 'index.html');
-    console.log('🔄 Serving index.html for route:', req.path);
-    
-    res.sendFile(indexPath, (err) => {
-      if (err) {
-        console.error('❌ Error serving index.html:', err);
-        res.status(500).send('Internal Server Error - Could not serve application');
-      }
-    });
-  } catch (error) {
-    console.error('❌ Error in catchall handler:', error);
-    res.status(500).send('Internal Server Error');
-  }
-});
-
-// Global error handling middleware
-app.use((error, req, res, next) => {
-  console.error('❌ Server error:', error);
-  res.status(500).json({ 
-    error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong'
+  const indexPath = path.join(__dirname, 'dist', 'index.html');
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      res.status(500).send('Internal Server Error');
+    }
   });
 });
 
-// Internal keep-alive mechanism - ping self every 4 minutes
-const KEEP_ALIVE_INTERVAL = 4 * 60 * 1000; // 4 minutes
+// Optimized keep-alive - reduced frequency
+const KEEP_ALIVE_INTERVAL = 5 * 60 * 1000; // 5 minutes instead of 4
 let keepAliveInterval;
 
 function startInternalKeepAlive() {
   if (process.env.NODE_ENV === 'production') {
-    console.log('🔄 Starting internal keep-alive mechanism');
+    console.log('🔄 Starting optimized keep-alive mechanism');
     keepAliveInterval = setInterval(() => {
-      // Self-ping to prevent Azure from sleeping the app
       const http = require('http');
-      const options = {
+      const req = http.request({
         hostname: 'localhost',
         port: port,
         path: '/api/keep-alive',
         method: 'GET',
-        timeout: 5000
-      };
-
-      const req = http.request(options, (res) => {
-        console.log(`💓 Keep-alive ping: ${res.statusCode}`);
+        timeout: 3000 // Reduced timeout
+      }, (res) => {
+        // Minimal logging to reduce I/O
+        if (res.statusCode !== 200) {
+          console.warn(`Keep-alive issue: ${res.statusCode}`);
+        }
       });
 
-      req.on('error', (err) => {
-        console.error('💓 Keep-alive ping failed:', err.message);
-      });
-
-      req.on('timeout', () => {
-        console.error('💓 Keep-alive ping timeout');
-        req.destroy();
-      });
-
+      req.on('error', () => {}); // Silent error handling
+      req.on('timeout', () => req.destroy());
       req.end();
     }, KEEP_ALIVE_INTERVAL);
   }

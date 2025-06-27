@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { lazy } from 'react';
 import Navigation from '@/components/Navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,7 +17,10 @@ import {
   Brain
 } from "lucide-react";
 import { Link } from 'react-router-dom';
-import MonitoringDashboard from '@/components/monitoring/MonitoringDashboard';
+import LazyWrapper from '@/components/LazyWrapper';
+
+// Lazy load the monitoring dashboard to reduce initial bundle size
+const OptimizedMonitoringDashboard = lazy(() => import('@/components/monitoring/OptimizedMonitoringDashboard'));
 
 const Index = () => {
   const stats = {
@@ -57,7 +59,6 @@ const Index = () => {
   ];
 
   return (
-    // Use the blue dashboard background like Job Ads page
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100">
       <Navigation />
       
@@ -174,7 +175,7 @@ const Index = () => {
           </CardContent>
         </Card>
 
-        {/* System Health Monitoring */}
+        {/* System Health Monitoring - Now Optimized */}
         <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm mb-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -182,11 +183,13 @@ const Index = () => {
               System Health & Monitoring
             </CardTitle>
             <CardDescription>
-              Real-time health checks and 24/7 uptime monitoring
+              Optimized real-time health checks and resource monitoring
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <MonitoringDashboard />
+            <LazyWrapper>
+              <OptimizedMonitoringDashboard />
+            </LazyWrapper>
           </CardContent>
         </Card>
 
