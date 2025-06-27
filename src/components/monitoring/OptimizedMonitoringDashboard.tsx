@@ -1,3 +1,4 @@
+
 import React, { memo, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +17,7 @@ const OptimizedMonitoringDashboard = memo(() => {
     gcTime: 300000, // Keep in cache for 5 minutes
   });
 
-  const statusCards = useMemo((): React.ReactNode[] => {
+  const statusCards = useMemo(() => {
     if (!healthMetrics?.services) return [];
 
     return Object.entries(healthMetrics.services).map(([service, status]) => (
