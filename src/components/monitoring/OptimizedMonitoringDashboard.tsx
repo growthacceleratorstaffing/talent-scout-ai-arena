@@ -1,3 +1,4 @@
+
 import React, { memo, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,8 +17,10 @@ const OptimizedMonitoringDashboard = memo(() => {
     gcTime: 300000, // Keep in cache for 5 minutes
   });
 
-  const statusCards = useMemo<JSX.Element[]>(() => {
-    if (!healthMetrics?.services) return [];
+  const renderStatusCards = () => {
+    if (!healthMetrics?.services) {
+      return <p className="text-muted-foreground">Loading service status...</p>;
+    }
 
     return Object.entries(healthMetrics.services).map(([service, status]) => (
       <div key={service} className="flex items-center justify-between p-3 border rounded-lg">
@@ -36,7 +39,7 @@ const OptimizedMonitoringDashboard = memo(() => {
         </Badge>
       </div>
     ));
-  }, [healthMetrics?.services]);
+  };
 
   return (
     <div className="space-y-6">
@@ -94,7 +97,7 @@ const OptimizedMonitoringDashboard = memo(() => {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {statusCards.length > 0 ? statusCards : <p className="text-muted-foreground">Loading service status...</p>}
+            {renderStatusCards()}
           </div>
         </CardContent>
       </Card>
