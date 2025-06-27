@@ -1,4 +1,5 @@
 
+
 import React, { memo, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,6 +8,8 @@ import { Brain, RefreshCw, Activity } from 'lucide-react';
 import { optimizedMonitoringService } from '@/services/optimizedMonitoringService';
 import { useQuery } from '@tanstack/react-query';
 import KeepAliveStatus from './KeepAliveStatus';
+
+type ServiceStatus = 'connected' | 'failed' | 'degraded' | 'not_configured';
 
 const OptimizedMonitoringDashboard = memo(() => {
   const { data: healthMetrics, isLoading, refetch } = useQuery({
@@ -22,7 +25,9 @@ const OptimizedMonitoringDashboard = memo(() => {
       return <p className="text-muted-foreground">Loading service status...</p>;
     }
 
-    return Object.entries(healthMetrics.services).map(([service, status]) => (
+    const services = healthMetrics.services as Record<string, ServiceStatus>;
+    
+    return Object.entries(services).map(([service, status]) => (
       <div key={service} className="flex items-center justify-between p-3 border rounded-lg">
         <div className="flex items-center gap-3">
           <Activity className="h-4 w-4" />
@@ -108,3 +113,4 @@ const OptimizedMonitoringDashboard = memo(() => {
 OptimizedMonitoringDashboard.displayName = 'OptimizedMonitoringDashboard';
 
 export default OptimizedMonitoringDashboard;
+
