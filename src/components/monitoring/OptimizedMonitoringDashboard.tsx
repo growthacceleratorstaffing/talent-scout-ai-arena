@@ -17,7 +17,7 @@ const OptimizedMonitoringDashboard = memo(() => {
     gcTime: 300000, // Keep in cache for 5 minutes
   });
 
-  const statusCards = useMemo((): JSX.Element[] => {
+  const statusCards = useMemo(() => {
     if (!healthMetrics) return [];
 
     return Object.entries(healthMetrics.services).map(([service, status]) => (
