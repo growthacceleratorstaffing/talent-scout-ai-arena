@@ -10,7 +10,8 @@ import { Separator } from '@/components/ui/separator';
 import { 
   Clock, User, Code, Brain, FileText, Folder, FolderOpen, Terminal, 
   Play, Save, GitBranch, GitCommit, Eye, Settings, Download, Upload,
-  Search, Replace, Zap, Database, Globe, Monitor, Cpu
+  Search, Replace, Zap, Database, Globe, Monitor, Cpu, Copy, Check,
+  Maximize2, Minimize2, RotateCcw, RotateCw
 } from 'lucide-react';
 
 interface AssessmentFormProps {
@@ -28,6 +29,8 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
 }) => {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [timeRemaining, setTimeRemaining] = useState(3600); // 60 minutes
+  const [expandedQuestions, setExpandedQuestions] = useState<Record<string, boolean>>({});
+  const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
 
   // Clear 4-question assessment format
   const assessmentQuestions = [
@@ -103,6 +106,128 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
     }
   };
 
+  const toggleExpanded = (questionId: string) => {
+    setExpandedQuestions(prev => ({ ...prev, [questionId]: !prev[questionId] }));
+  };
+
+  const copyToClipboard = async (questionId: string) => {
+    const text = answers[questionId] || '';
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedStates(prev => ({ ...prev, [questionId]: true }));
+      setTimeout(() => {
+        setCopiedStates(prev => ({ ...prev, [questionId]: false }));
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy text');
+    }
+  };
+
+  const getFileExtension = (type: string) => {
+    switch (type) {
+      case 'coding': return '.py';
+      case 'system_design': return '.md';
+      case 'problem_solving': return '.md';
+      case 'technical_knowledge': return '.md';
+      default: return '.txt';
+    }
+  };
+
+  const renderCodeEditor = (question: any) => {
+    const isExpanded = expandedQuestions[question.id];
+    const isCopied = copiedStates[question.id];
+    const value = answers[question.id] || '';
+    const lines = value.split('\n').length;
+    
+    return (
+      <div className="border border-gray-300 rounded-lg overflow-hidden bg-white">
+        {/* GitHub-style header */}
+        <div className="bg-gray-50 border-b border-gray-200 px-4 py-2 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Folder className="h-4 w-4 text-gray-500" />
+            <span className="text-sm font-medium text-gray-700">
+              {question.title.toLowerCase().replace(/ /g, '_')}{getFileExtension(question.type)}
+            </span>
+            <Badge variant="outline" className="text-xs">
+              {lines} lines
+            </Badge>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => copyToClipboard(question.id)}
+              className="h-6 px-2"
+            >
+              {isCopied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => toggleExpanded(question.id)}
+              className="h-6 px-2"
+            >
+              {isExpanded ? <Minimize2 className="h-3 w-3" /> : <Maximize2 className="h-3 w-3" />}
+            </Button>
+            <Separator orientation="vertical" className="h-4 mx-1" />
+            <Button variant="ghost" size="sm" className="h-6 px-2">
+              <GitBranch className="h-3 w-3" />
+            </Button>
+            <Button variant="ghost" size="sm" className="h-6 px-2">
+              <GitCommit className="h-3 w-3" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Code editor area */}
+        <div className="relative">
+          <div className="flex">
+            {/* Line numbers */}
+            <div className="bg-gray-50 px-2 py-2 border-r border-gray-200 text-right">
+              {Array.from({ length: Math.max(lines, 10) }, (_, i) => (
+                <div key={i + 1} className="text-xs text-gray-400 leading-6 min-h-[24px]">
+                  {i + 1}
+                </div>
+              ))}
+            </div>
+            
+            {/* Code area */}
+            <div className="flex-1 relative">
+              <Textarea
+                value={value}
+                onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                placeholder={question.placeholder}
+                className={`border-0 focus:ring-0 font-mono text-sm resize-none rounded-none ${
+                  isExpanded ? 'min-h-[500px]' : 'min-h-[300px]'
+                }`}
+                disabled={loading}
+                style={{
+                  lineHeight: '24px',
+                  padding: '8px 12px'
+                }}
+              />
+            </div>
+          </div>
+          
+          {/* Bottom toolbar */}
+          <div className="border-t border-gray-200 bg-gray-50 px-4 py-2 flex items-center justify-between text-xs text-gray-500">
+            <div className="flex items-center gap-4">
+              <span>UTF-8</span>
+              <span>LF</span>
+              <span>{question.type === 'coding' ? 'Python' : 'Markdown'}</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <span>Ln {value.split('\n').length}, Col {(value.split('\n').pop() || '').length + 1}</span>
+              <Button variant="ghost" size="sm" className="h-5 px-2">
+                <Settings className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="max-w-6xl mx-auto">
       <Card className="p-6 mb-6">
@@ -152,13 +277,7 @@ const AssessmentForm: React.FC<AssessmentFormProps> = ({
               <p className="text-gray-700 leading-relaxed">{question.question}</p>
             </div>
 
-            <Textarea
-              value={answers[question.id] || ''}
-              onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-              placeholder={question.placeholder}
-              className="min-h-[200px] font-mono text-sm"
-              disabled={loading}
-            />
+            {renderCodeEditor(question)}
           </Card>
         ))}
       </div>
