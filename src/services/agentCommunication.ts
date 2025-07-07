@@ -331,11 +331,83 @@ class AgentCommunicationService {
   }
 
   getRecommendedCandidates() {
-    // Combine real Supabase candidates with mock passed candidates
+    // Combine real Supabase candidates with mock passed candidates that have proper structure for assessments
     const supabaseCandidates = supabaseAgentService.getRecommendedCandidates();
-    const mockPassedCandidates = this.state.evaluationResults.filter(candidate => 
-      candidate.candidateId && candidate.candidateId.startsWith('candidate-') && candidate.recommendation === 'recommend'
-    );
+    
+    // Mock candidates with proper assessment structure
+    const mockPassedCandidates = [
+      {
+        id: 'candidate-001',
+        candidateId: 'candidate-001',
+        candidateName: 'Sarah Johnson',
+        name: 'Sarah Johnson',
+        recommendation: 'recommend',
+        score: 85,
+        jobId: 'job-001',
+        interviewCompleted: true,
+        reasoning: 'Strong technical skills and excellent problem-solving abilities.',
+        skills: ['React', 'TypeScript', 'Node.js'],
+        strengths: ['5+ years experience', 'Strong communication', 'Leadership skills'],
+        evaluatedAt: '2024-01-10T10:00:00Z'
+      },
+      {
+        id: 'candidate-002',
+        candidateId: 'candidate-002',
+        candidateName: 'Mike Chen',
+        name: 'Mike Chen',
+        recommendation: 'recommend',
+        score: 78,
+        jobId: 'job-001',
+        interviewCompleted: true,
+        reasoning: 'Good technical foundation with solid coding skills.',
+        skills: ['JavaScript', 'Python', 'AWS'],
+        strengths: ['3+ years experience', 'Quick learner', 'Team player'],
+        evaluatedAt: '2024-01-11T14:00:00Z'
+      },
+      {
+        id: 'candidate-003',
+        candidateId: 'candidate-003',
+        candidateName: 'Emma Davis', 
+        name: 'Emma Davis',
+        recommendation: 'recommend',
+        score: 92,
+        jobId: 'job-002',
+        interviewCompleted: true,
+        reasoning: 'Outstanding performance across all technical areas.',
+        skills: ['React', 'Node.js', 'MongoDB'],
+        strengths: ['7+ years experience', 'System design expert', 'Mentoring skills'],
+        evaluatedAt: '2024-01-12T09:00:00Z'
+      },
+      {
+        id: 'candidate-004',
+        candidateId: 'candidate-004',
+        candidateName: 'John Smith',
+        name: 'John Smith',
+        recommendation: 'recommend',
+        score: 81,
+        jobId: 'job-001',
+        interviewCompleted: true,
+        reasoning: 'Strong technical skills with good analytical thinking.',
+        skills: ['Java', 'Spring', 'Docker'],
+        strengths: ['4+ years experience', 'Problem solver', 'Detail oriented'],
+        evaluatedAt: '2024-01-13T11:00:00Z'
+      },
+      {
+        id: 'candidate-005',
+        candidateId: 'candidate-005',
+        candidateName: 'Lisa Wang',
+        name: 'Lisa Wang',
+        recommendation: 'recommend',
+        score: 89,
+        jobId: 'job-002',
+        interviewCompleted: true,
+        reasoning: 'Excellent full-stack capabilities with strong architecture knowledge.',
+        skills: ['Vue.js', 'Python', 'PostgreSQL'],
+        strengths: ['6+ years experience', 'Full-stack expert', 'Architecture skills'],
+        evaluatedAt: '2024-01-14T15:00:00Z'
+      }
+    ];
+    
     return [...supabaseCandidates, ...mockPassedCandidates];
   }
 
