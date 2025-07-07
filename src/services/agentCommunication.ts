@@ -40,55 +40,79 @@ class AgentCommunicationService {
       const mockPassedCandidates = [
         {
           candidateId: 'candidate-001',
-          candidateName: 'Sarah Johnson',
+          candidateName: 'Yassine Skoutti',
           recommendation: 'recommend',
-          score: 85,
+          score: 97,
           jobId: 'job-001',
           interviewCompleted: true
         },
         {
           candidateId: 'candidate-002', 
-          candidateName: 'Mike Chen',
+          candidateName: 'Anna Saiapina',
           recommendation: 'recommend',
-          score: 78,
+          score: 100,
           jobId: 'job-001',
           interviewCompleted: true
         },
         {
           candidateId: 'candidate-003',
-          candidateName: 'Emma Davis', 
+          candidateName: 'Mohammed Nijas.K.K', 
           recommendation: 'recommend',
-          score: 92,
+          score: 98,
           jobId: 'job-002',
           interviewCompleted: true
         },
         {
           candidateId: 'candidate-004',
-          candidateName: 'John Smith',
+          candidateName: 'Naresh Potla',
           recommendation: 'recommend',
-          score: 81,
+          score: 100,
           jobId: 'job-001',
           interviewCompleted: true
         },
         {
           candidateId: 'candidate-005',
-          candidateName: 'Lisa Wang',
+          candidateName: 'Volodymyr Yurkov',
           recommendation: 'recommend',
-          score: 89,
+          score: 93,
           jobId: 'job-002',
+          interviewCompleted: true
+        },
+        {
+          candidateId: 'candidate-006',
+          candidateName: 'Asmaa Sayed',
+          recommendation: 'recommend',
+          score: 99,
+          jobId: 'job-001',
+          interviewCompleted: true
+        },
+        {
+          candidateId: 'candidate-007',
+          candidateName: 'Usman Ghani',
+          recommendation: 'recommend',
+          score: 91,
+          jobId: 'job-002',
+          interviewCompleted: true
+        },
+        {
+          candidateId: 'candidate-008',
+          candidateName: 'Namindu Nadeeshan',
+          recommendation: 'recommend',
+          score: 95,
+          jobId: 'job-001',
           interviewCompleted: true
         }
       ];
 
-      // Add mock completed assessments
+      // Add mock completed assessments with real names
       this.mockAssessments = [
         {
           id: 'assessment-001',
           candidateId: 'candidate-001',
           status: 'completed',
-          score: 87,
+          score: 89,
           verdict: 'passed',
-          feedback: 'Excellent technical skills and problem-solving abilities. Strong communication and demonstrates deep understanding of software architecture.',
+          feedback: 'Excellent technical skills and problem-solving abilities. Outstanding performance on algorithmic challenges.',
           startedAt: '2024-01-10T10:00:00Z',
           completedAt: '2024-01-10T11:30:00Z'
         },
@@ -96,9 +120,9 @@ class AgentCommunicationService {
           id: 'assessment-002',
           candidateId: 'candidate-002',
           status: 'completed',
-          score: 72,
+          score: 95,
           verdict: 'passed',
-          feedback: 'Good technical foundation with solid coding skills. Shows potential for growth and learning.',
+          feedback: 'Perfect technical execution with exceptional system design skills. Demonstrates deep understanding of software architecture.',
           startedAt: '2024-01-11T14:00:00Z',
           completedAt: '2024-01-11T15:45:00Z'
         },
@@ -106,9 +130,9 @@ class AgentCommunicationService {
           id: 'assessment-003',
           candidateId: 'candidate-003',
           status: 'completed',
-          score: 94,
+          score: 91,
           verdict: 'passed',
-          feedback: 'Outstanding performance across all technical areas. Exceptional problem-solving and system design skills.',
+          feedback: 'Outstanding performance across all technical areas. Exceptional problem-solving and analytical thinking.',
           startedAt: '2024-01-12T09:00:00Z',
           completedAt: '2024-01-12T10:30:00Z'
         },
@@ -116,9 +140,9 @@ class AgentCommunicationService {
           id: 'assessment-004',
           candidateId: 'candidate-004',
           status: 'completed',
-          score: 58,
-          verdict: 'failed',
-          feedback: 'Shows basic understanding but lacks depth in key technical areas. Would benefit from additional training.',
+          score: 96,
+          verdict: 'passed',
+          feedback: 'Perfect technical performance with exceptional coding skills and system design knowledge.',
           startedAt: '2024-01-13T11:00:00Z',
           completedAt: '2024-01-13T12:30:00Z'
         },
@@ -126,11 +150,31 @@ class AgentCommunicationService {
           id: 'assessment-005',
           candidateId: 'candidate-005',
           status: 'completed',
-          score: 79,
+          score: 87,
           verdict: 'passed',
-          feedback: 'Strong technical skills with good analytical thinking. Demonstrates ability to work through complex problems.',
+          feedback: 'Strong technical skills with excellent analytical thinking. Demonstrates ability to work through complex problems.',
           startedAt: '2024-01-14T15:00:00Z',
           completedAt: '2024-01-14T16:30:00Z'
+        },
+        {
+          id: 'assessment-006',
+          candidateId: 'candidate-006',
+          status: 'completed',
+          score: 94,
+          verdict: 'passed',
+          feedback: 'Near-perfect performance with exceptional technical depth and leadership qualities.',
+          startedAt: '2024-01-15T10:00:00Z',
+          completedAt: '2024-01-15T11:15:00Z'
+        },
+        {
+          id: 'assessment-007',
+          candidateId: 'candidate-007',
+          status: 'completed',
+          score: 84,
+          verdict: 'passed',
+          feedback: 'Strong technical foundation with excellent teamwork and communication skills.',
+          startedAt: '2024-01-16T14:00:00Z',
+          completedAt: '2024-01-16T15:30:00Z'
         }
       ];
 
@@ -334,77 +378,119 @@ class AgentCommunicationService {
     // Combine real Supabase candidates with mock passed candidates that have proper structure for assessments
     const supabaseCandidates = supabaseAgentService.getRecommendedCandidates();
     
-    // Mock candidates with proper assessment structure
+    // Mock candidates with proper assessment structure using real names
     const mockPassedCandidates = [
       {
         id: 'candidate-001',
         candidateId: 'candidate-001',
-        candidateName: 'Sarah Johnson',
-        name: 'Sarah Johnson',
+        candidateName: 'Yassine Skoutti',
+        name: 'Yassine Skoutti',
         recommendation: 'recommend',
-        score: 85,
+        score: 97,
         jobId: 'job-001',
         interviewCompleted: true,
-        reasoning: 'Strong technical skills and excellent problem-solving abilities.',
+        reasoning: 'Outstanding technical performance with excellent problem-solving skills.',
         skills: ['React', 'TypeScript', 'Node.js'],
-        strengths: ['5+ years experience', 'Strong communication', 'Leadership skills'],
+        strengths: ['Full-stack expertise', 'Strong communication', 'Leadership potential'],
         evaluatedAt: '2024-01-10T10:00:00Z'
       },
       {
         id: 'candidate-002',
         candidateId: 'candidate-002',
-        candidateName: 'Mike Chen',
-        name: 'Mike Chen',
+        candidateName: 'Anna Saiapina',
+        name: 'Anna Saiapina',
         recommendation: 'recommend',
-        score: 78,
+        score: 100,
         jobId: 'job-001',
         interviewCompleted: true,
-        reasoning: 'Good technical foundation with solid coding skills.',
+        reasoning: 'Perfect score with exceptional technical depth and communication.',
         skills: ['JavaScript', 'Python', 'AWS'],
-        strengths: ['3+ years experience', 'Quick learner', 'Team player'],
+        strengths: ['Perfect interview score', 'System architecture', 'Team collaboration'],
         evaluatedAt: '2024-01-11T14:00:00Z'
       },
       {
         id: 'candidate-003',
         candidateId: 'candidate-003',
-        candidateName: 'Emma Davis', 
-        name: 'Emma Davis',
+        candidateName: 'Mohammed Nijas.K.K', 
+        name: 'Mohammed Nijas.K.K',
         recommendation: 'recommend',
-        score: 92,
+        score: 98,
         jobId: 'job-002',
         interviewCompleted: true,
-        reasoning: 'Outstanding performance across all technical areas.',
+        reasoning: 'Excellent performance across all technical areas with strong analytical skills.',
         skills: ['React', 'Node.js', 'MongoDB'],
-        strengths: ['7+ years experience', 'System design expert', 'Mentoring skills'],
+        strengths: ['Near-perfect score', 'Database expertise', 'Problem solving'],
         evaluatedAt: '2024-01-12T09:00:00Z'
       },
       {
         id: 'candidate-004',
         candidateId: 'candidate-004',
-        candidateName: 'John Smith',
-        name: 'John Smith',
+        candidateName: 'Naresh Potla',
+        name: 'Naresh Potla',
         recommendation: 'recommend',
-        score: 81,
+        score: 100,
         jobId: 'job-001',
         interviewCompleted: true,
-        reasoning: 'Strong technical skills with good analytical thinking.',
+        reasoning: 'Perfect technical performance with exceptional coding skills.',
         skills: ['Java', 'Spring', 'Docker'],
-        strengths: ['4+ years experience', 'Problem solver', 'Detail oriented'],
+        strengths: ['Perfect interview score', 'Enterprise experience', 'DevOps knowledge'],
         evaluatedAt: '2024-01-13T11:00:00Z'
       },
       {
         id: 'candidate-005',
         candidateId: 'candidate-005',
-        candidateName: 'Lisa Wang',
-        name: 'Lisa Wang',
+        candidateName: 'Volodymyr Yurkov',
+        name: 'Volodymyr Yurkov',
         recommendation: 'recommend',
-        score: 89,
+        score: 93,
         jobId: 'job-002',
         interviewCompleted: true,
-        reasoning: 'Excellent full-stack capabilities with strong architecture knowledge.',
+        reasoning: 'Strong technical foundation with excellent problem-solving approach.',
         skills: ['Vue.js', 'Python', 'PostgreSQL'],
-        strengths: ['6+ years experience', 'Full-stack expert', 'Architecture skills'],
+        strengths: ['Senior-level experience', 'Full-stack development', 'System design'],
         evaluatedAt: '2024-01-14T15:00:00Z'
+      },
+      {
+        id: 'candidate-006',
+        candidateId: 'candidate-006',
+        candidateName: 'Asmaa Sayed',
+        name: 'Asmaa Sayed',
+        recommendation: 'recommend',
+        score: 99,
+        jobId: 'job-001',
+        interviewCompleted: true,
+        reasoning: 'Near-perfect performance with exceptional technical depth.',
+        skills: ['React', 'TypeScript', 'AWS'],
+        strengths: ['Near-perfect score', 'Cloud expertise', 'Technical leadership'],
+        evaluatedAt: '2024-01-15T10:00:00Z'
+      },
+      {
+        id: 'candidate-007',
+        candidateId: 'candidate-007',
+        candidateName: 'Usman Ghani',
+        name: 'Usman Ghani',
+        recommendation: 'recommend',
+        score: 91,
+        jobId: 'job-002',
+        interviewCompleted: true,
+        reasoning: 'Strong technical skills with excellent communication and teamwork.',
+        skills: ['Angular', 'Node.js', 'MongoDB'],
+        strengths: ['Strong technical foundation', 'Team collaboration', 'Problem solving'],
+        evaluatedAt: '2024-01-16T14:00:00Z'
+      },
+      {
+        id: 'candidate-008',
+        candidateId: 'candidate-008',
+        candidateName: 'Namindu Nadeeshan',
+        name: 'Namindu Nadeeshan',
+        recommendation: 'recommend',
+        score: 95,
+        jobId: 'job-001',
+        interviewCompleted: true,
+        reasoning: 'Excellent technical performance with strong analytical thinking.',
+        skills: ['React', 'Python', 'Docker'],
+        strengths: ['High performance score', 'Full-stack skills', 'DevOps knowledge'],
+        evaluatedAt: '2024-01-17T11:00:00Z'
       }
     ];
     
