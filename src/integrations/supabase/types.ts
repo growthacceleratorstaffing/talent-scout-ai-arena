@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instanciate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "12.2.3 (519615d)"
+  }
   public: {
     Tables: {
       candidate_interviews: {
@@ -240,6 +245,39 @@ export type Database = {
         }
         Relationships: []
       }
+      email_campaigns: {
+        Row: {
+          created_at: string
+          description: string | null
+          html_template: string
+          id: string
+          is_active: boolean
+          name: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          html_template: string
+          id?: string
+          is_active?: boolean
+          name: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          html_template?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       integration_settings: {
         Row: {
           api_rate_limit_remaining: number | null
@@ -322,6 +360,207 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      jobadder_tokens: {
+        Row: {
+          access_token: string
+          api_base_url: string
+          created_at: string
+          expires_at: string
+          id: string
+          refresh_token: string | null
+          scopes: string[]
+          token_type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          api_base_url?: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          refresh_token?: string | null
+          scopes?: string[]
+          token_type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          api_base_url?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          refresh_token?: string | null
+          scopes?: string[]
+          token_type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      jobadder_user_permissions: {
+        Row: {
+          created_at: string | null
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          scope: Database["public"]["Enums"]["jobadder_scope"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          scope: Database["public"]["Enums"]["jobadder_scope"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          scope?: Database["public"]["Enums"]["jobadder_scope"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobadder_user_permissions_granted_by_fkey"
+            columns: ["granted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "jobadder_user_permissions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jobadder_users: {
+        Row: {
+          assigned_jobs: string[] | null
+          created_at: string | null
+          id: string
+          jobadder_email: string
+          jobadder_role: Database["public"]["Enums"]["jobadder_scope"]
+          jobadder_user_id: string
+          permissions: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          assigned_jobs?: string[] | null
+          created_at?: string | null
+          id?: string
+          jobadder_email: string
+          jobadder_role?: Database["public"]["Enums"]["jobadder_scope"]
+          jobadder_user_id: string
+          permissions?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          assigned_jobs?: string[] | null
+          created_at?: string | null
+          id?: string
+          jobadder_email?: string
+          jobadder_role?: Database["public"]["Enums"]["jobadder_scope"]
+          jobadder_user_id?: string
+          permissions?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      jobs: {
+        Row: {
+          area_id: string | null
+          category_id: string | null
+          category_name: string | null
+          company_id: string | null
+          company_name: string | null
+          contact_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          job_description: string | null
+          jobadder_job_id: string | null
+          location_id: string | null
+          location_name: string | null
+          salary_currency: string | null
+          salary_rate_high: number | null
+          salary_rate_low: number | null
+          salary_rate_per: string | null
+          skill_tags: string[] | null
+          source: string | null
+          sub_category_id: string | null
+          synced_to_jobadder: boolean | null
+          title: string
+          updated_at: string
+          work_type_id: string | null
+          work_type_name: string | null
+        }
+        Insert: {
+          area_id?: string | null
+          category_id?: string | null
+          category_name?: string | null
+          company_id?: string | null
+          company_name?: string | null
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          job_description?: string | null
+          jobadder_job_id?: string | null
+          location_id?: string | null
+          location_name?: string | null
+          salary_currency?: string | null
+          salary_rate_high?: number | null
+          salary_rate_low?: number | null
+          salary_rate_per?: string | null
+          skill_tags?: string[] | null
+          source?: string | null
+          sub_category_id?: string | null
+          synced_to_jobadder?: boolean | null
+          title: string
+          updated_at?: string
+          work_type_id?: string | null
+          work_type_name?: string | null
+        }
+        Update: {
+          area_id?: string | null
+          category_id?: string | null
+          category_name?: string | null
+          company_id?: string | null
+          company_name?: string | null
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          job_description?: string | null
+          jobadder_job_id?: string | null
+          location_id?: string | null
+          location_name?: string | null
+          salary_currency?: string | null
+          salary_rate_high?: number | null
+          salary_rate_low?: number | null
+          salary_rate_per?: string | null
+          skill_tags?: string[] | null
+          source?: string | null
+          sub_category_id?: string | null
+          synced_to_jobadder?: boolean | null
+          title?: string
+          updated_at?: string
+          work_type_id?: string | null
+          work_type_name?: string | null
+        }
+        Relationships: []
       }
       linkedin_ad_accounts: {
         Row: {
@@ -487,12 +726,84 @@ export type Database = {
           },
         ]
       }
+      local_placements: {
+        Row: {
+          candidate_email: string
+          candidate_id: string
+          candidate_name: string
+          company_name: string
+          created_at: string
+          end_date: string | null
+          id: string
+          job_id: string
+          job_title: string
+          jobadder_placement_id: number | null
+          notes: string | null
+          salary_currency: string | null
+          salary_rate: number | null
+          salary_rate_per: string | null
+          start_date: string
+          status_id: number | null
+          status_name: string | null
+          synced_to_jobadder: boolean | null
+          updated_at: string
+          work_type_id: string | null
+        }
+        Insert: {
+          candidate_email: string
+          candidate_id: string
+          candidate_name: string
+          company_name: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          job_id: string
+          job_title: string
+          jobadder_placement_id?: number | null
+          notes?: string | null
+          salary_currency?: string | null
+          salary_rate?: number | null
+          salary_rate_per?: string | null
+          start_date: string
+          status_id?: number | null
+          status_name?: string | null
+          synced_to_jobadder?: boolean | null
+          updated_at?: string
+          work_type_id?: string | null
+        }
+        Update: {
+          candidate_email?: string
+          candidate_id?: string
+          candidate_name?: string
+          company_name?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          job_id?: string
+          job_title?: string
+          jobadder_placement_id?: number | null
+          notes?: string | null
+          salary_currency?: string | null
+          salary_rate?: number | null
+          salary_rate_per?: string | null
+          start_date?: string
+          status_id?: number | null
+          status_name?: string | null
+          synced_to_jobadder?: boolean | null
+          updated_at?: string
+          work_type_id?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string | null
           email: string
           full_name: string | null
           id: string
+          jobadder_scopes:
+            | Database["public"]["Enums"]["jobadder_scope"][]
+            | null
           role: string | null
           updated_at: string | null
         }
@@ -501,6 +812,9 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          jobadder_scopes?:
+            | Database["public"]["Enums"]["jobadder_scope"][]
+            | null
           role?: string | null
           updated_at?: string | null
         }
@@ -509,6 +823,9 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          jobadder_scopes?:
+            | Database["public"]["Enums"]["jobadder_scope"][]
+            | null
           role?: string | null
           updated_at?: string | null
         }
@@ -572,7 +889,7 @@ export type Database = {
           id: string
           permissions: Json | null
           updated_at: string | null
-          user_id: string
+          user_id: string | null
           workable_email: string
           workable_role: Database["public"]["Enums"]["workable_role"]
           workable_user_id: string
@@ -583,7 +900,7 @@ export type Database = {
           id?: string
           permissions?: Json | null
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
           workable_email: string
           workable_role?: Database["public"]["Enums"]["workable_role"]
           workable_user_id: string
@@ -594,7 +911,7 @@ export type Database = {
           id?: string
           permissions?: Json | null
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
           workable_email?: string
           workable_role?: Database["public"]["Enums"]["workable_role"]
           workable_user_id?: string
@@ -618,11 +935,26 @@ export type Database = {
         Args: { _user_id: string }
         Returns: string[]
       }
+      has_jobadder_scope: {
+        Args: {
+          _user_id: string
+          _scope: Database["public"]["Enums"]["jobadder_scope"]
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _user_id: string
           _role: Database["public"]["Enums"]["app_role"]
         }
+        Returns: boolean
+      }
+      has_workable_admin_role: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
+      has_workable_permission: {
+        Args: { _user_id: string; _permission: string }
         Returns: boolean
       }
       has_workable_role: {
@@ -640,6 +972,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      validate_jobadder_email: {
+        Args: { email_to_check: string }
+        Returns: boolean
+      }
+      validate_workable_email: {
+        Args: { email_to_check: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
@@ -649,12 +989,38 @@ export type Database = {
         | "completed"
         | "passed"
         | "failed"
+      jobadder_scope:
+        | "read"
+        | "write"
+        | "read_candidate"
+        | "write_candidate"
+        | "read_company"
+        | "write_company"
+        | "read_contact"
+        | "write_contact"
+        | "read_jobad"
+        | "write_jobad"
+        | "read_jobapplication"
+        | "write_jobapplication"
+        | "read_job"
+        | "write_job"
+        | "read_placement"
+        | "write_placement"
+        | "read_user"
+        | "partner_jobboard"
+        | "offline_access"
       workable_role:
         | "admin"
         | "hiring_manager"
         | "recruiter"
         | "interviewer"
         | "viewer"
+        | "simple"
+        | "reviewer"
+        | "no_access"
+        | "hris_admin"
+        | "hris_employee"
+        | "hris_no_access"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -662,21 +1028,25 @@ export type Database = {
   }
 }
 
-type DefaultSchema = Database[Extract<keyof Database, "public">]
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
       Row: infer R
     }
     ? R
@@ -694,14 +1064,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Insert: infer I
     }
     ? I
@@ -717,14 +1089,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
       Update: infer U
     }
     ? U
@@ -740,14 +1114,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
@@ -755,14 +1131,16 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
+    schema: keyof DatabaseWithoutInternals
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
     ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
@@ -778,12 +1156,39 @@ export const Constants = {
         "passed",
         "failed",
       ],
+      jobadder_scope: [
+        "read",
+        "write",
+        "read_candidate",
+        "write_candidate",
+        "read_company",
+        "write_company",
+        "read_contact",
+        "write_contact",
+        "read_jobad",
+        "write_jobad",
+        "read_jobapplication",
+        "write_jobapplication",
+        "read_job",
+        "write_job",
+        "read_placement",
+        "write_placement",
+        "read_user",
+        "partner_jobboard",
+        "offline_access",
+      ],
       workable_role: [
         "admin",
         "hiring_manager",
         "recruiter",
         "interviewer",
         "viewer",
+        "simple",
+        "reviewer",
+        "no_access",
+        "hris_admin",
+        "hris_employee",
+        "hris_no_access",
       ],
     },
   },

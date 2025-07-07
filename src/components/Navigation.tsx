@@ -10,10 +10,10 @@ const Navigation = () => {
   const navItems = [
     { path: '/', label: 'Dashboard', icon: Briefcase },
     { path: '/ads', label: 'Job Ads', icon: Sparkles },
-    { path: '/talent-pool', label: 'Talent Pool', icon: Users },
+    { path: '/applicants', label: 'Applicants', icon: Users },
     { path: '/ai-interview', label: 'AI Interview', icon: Bot },
     { path: '/assessment', label: 'Assessment', icon: ClipboardCheck },
-    { path: '/profiles', label: 'Rejected', icon: UserX }
+    { path: '/talent-pool', label: 'Talent Pool', icon: UserX }
   ];
 
   return (

@@ -9,7 +9,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Ads from "./pages/Ads";
 import TalentPool from "./pages/TalentPool";
-import Profiles from "./pages/Profiles";
+import Applicants from "./pages/Applicants";
 import LinkedIn from "./pages/LinkedIn";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -41,6 +41,11 @@ const App = () => (
                 <Ads />
               </ProtectedRoute>
             } />
+            <Route path="/applicants" element={
+              <ProtectedRoute>
+                <Applicants />
+              </ProtectedRoute>
+            } />
             <Route path="/talent-pool" element={
               <ProtectedRoute>
                 <TalentPool />
@@ -54,11 +59,6 @@ const App = () => (
             <Route path="/assessment" element={
               <ProtectedRoute>
                 <Assessment />
-              </ProtectedRoute>
-            } />
-            <Route path="/profiles" element={
-              <ProtectedRoute>
-                <Profiles />
               </ProtectedRoute>
             } />
             <Route path="/linkedin" element={
