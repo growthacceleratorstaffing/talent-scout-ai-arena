@@ -57,13 +57,8 @@ const Navigation = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <Badge className="bg-green-100 text-green-800">
-              Azure AI Connected
-            </Badge>
-            <Button variant="outline" size="sm">
-              Settings
-            </Button>
+          <div className="flex items-center">
+            {/* Navigation items only */}
           </div>
         </div>
       </div>
