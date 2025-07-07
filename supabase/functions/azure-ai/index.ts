@@ -20,6 +20,12 @@ serve(async (req) => {
     // Get Azure AI credentials from environment
     const azureApiKey = Deno.env.get('AZURE_OPENAI_API_KEY');
     
+    console.log('Azure config check:', {
+      hasApiKey: !!azureApiKey,
+      keyLength: azureApiKey?.length,
+      keyStart: azureApiKey?.substring(0, 10) + '...'
+    });
+
     if (!azureApiKey) {
       console.error('Missing Azure AI credentials');
       return new Response(

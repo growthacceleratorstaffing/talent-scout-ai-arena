@@ -20,7 +20,9 @@ serve(async (req) => {
     const azureApiKey = Deno.env.get('AZURE_OPENAI_API_KEY');
     
     console.log('Azure config check:', {
-      hasApiKey: !!azureApiKey
+      hasApiKey: !!azureApiKey,
+      keyLength: azureApiKey?.length,
+      keyStart: azureApiKey?.substring(0, 10) + '...'
     });
 
     if (!azureApiKey) {
