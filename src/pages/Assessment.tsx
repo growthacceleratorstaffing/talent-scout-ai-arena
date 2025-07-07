@@ -85,14 +85,6 @@ const Assessment: React.FC = () => {
           <p className="text-gray-600">
             AI-powered technical assessments for candidates who have passed the AI interview
           </p>
-          
-          {/* Debug info */}
-          <div className="mt-4 p-4 bg-blue-50 rounded-lg text-sm">
-            <p><strong>Debug Info:</strong></p>
-            <p>Total recommended candidates: {recommendedCandidates.length}</p>
-            <p>Eligible for assessment: {eligibleCandidates.length}</p>
-            <p>Need AI interview: {nonInterviewedCandidates.length}</p>
-          </div>
         </div>
 
         <div className="grid gap-6">
@@ -205,26 +197,6 @@ const Assessment: React.FC = () => {
               </div>
             </Card>
           )}
-
-          {/* Demo Assessment Button */}
-          <Card className="p-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4">Start Assessment</h2>
-            <p className="text-gray-600 mb-4">
-              Start a demo assessment to see how the assessment system works
-            </p>
-            <Button 
-              onClick={() => handleStartAssessment({ 
-                candidateId: 'demo-candidate', 
-                candidateName: 'Demo Candidate',
-                score: 85,
-                recommendation: 'recommend'
-              })}
-              disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              Start Demo Assessment
-            </Button>
-          </Card>
 
           {/* Eligible candidates for assessment */}
           <Card className="p-6">
