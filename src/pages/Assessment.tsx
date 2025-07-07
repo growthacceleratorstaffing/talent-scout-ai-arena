@@ -134,6 +134,34 @@ const Assessment: React.FC = () => {
             </Card>
           )}
 
+          {/* Assessment Results */}
+          {assessments.length > 0 && (
+            <Card className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Assessment Results</h2>
+              <div className="space-y-4">
+                {assessments.map((assessment) => (
+                  <div key={assessment.id} className="p-4 border rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-medium">
+                        Candidate {assessment.candidateId?.slice(0, 8) || 'Unknown'}
+                      </h3>
+                      <Badge variant={assessment.verdict === 'passed' ? 'default' : 'destructive'}>
+                        {assessment.verdict}
+                      </Badge>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      <p>Score: {assessment.score}/100</p>
+                      <p>Completed: {new Date(assessment.completedAt || '').toLocaleString()}</p>
+                      {assessment.feedback && (
+                        <p className="mt-2 italic">"{assessment.feedback}"</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
           {/* Eligible candidates for assessment */}
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4">Candidates Ready for Assessment</h2>
@@ -215,34 +243,6 @@ const Assessment: React.FC = () => {
               )}
             </div>
           </Card>
-
-          {/* Assessment Results */}
-          {assessments.length > 0 && (
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4">Assessment Results</h2>
-              <div className="space-y-4">
-                {assessments.map((assessment) => (
-                  <div key={assessment.id} className="p-4 border rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-medium">
-                        Candidate {assessment.candidateId?.slice(0, 8) || 'Unknown'}
-                      </h3>
-                      <Badge variant={assessment.verdict === 'passed' ? 'default' : 'destructive'}>
-                        {assessment.verdict}
-                      </Badge>
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      <p>Score: {assessment.score}/100</p>
-                      <p>Completed: {new Date(assessment.completedAt || '').toLocaleString()}</p>
-                      {assessment.feedback && (
-                        <p className="mt-2 italic">"{assessment.feedback}"</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
         </div>
       </div>
     </div>
