@@ -59,7 +59,7 @@ const Assessment: React.FC = () => {
 
   if (selectedCandidate) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-100">
         <Navigation />
         <div className="max-w-4xl mx-auto py-8 px-4">
           <AssessmentForm
@@ -74,7 +74,7 @@ const Assessment: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-100">
       <Navigation />
       <div className="max-w-7xl mx-auto py-8 px-4">
         <div className="mb-8">
