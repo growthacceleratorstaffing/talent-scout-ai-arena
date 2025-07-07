@@ -40,7 +40,7 @@ serve(async (req) => {
     console.log('API key available:', !!azureApiKey);
 
     // Use the correct Azure OpenAI endpoint
-    const azureUrl = 'https://bart-majnl2y1-swedencentral.cognitiveservices.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview';
+    const azureUrl = 'https://aistudioaiservices773784968662.openai.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview';
     
     console.log('Making request to Azure URL:', azureUrl);
     
