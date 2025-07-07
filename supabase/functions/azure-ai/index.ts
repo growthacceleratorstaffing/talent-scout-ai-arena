@@ -35,8 +35,17 @@ serve(async (req) => {
     console.log('Azure endpoint:', azureEndpoint);
     console.log('API key available:', !!azureApiKey);
 
-    // Prepare the request to Azure OpenAI
-    const azureResponse = await fetch(azureEndpoint, {
+    // Prepare the request to Azure OpenAI - fix endpoint format
+    const deploymentName = Deno.env.get('AZURE_OPENAI_DEPLOYMENT_NAME') || 'gpt-4o';
+    
+    // Check if endpoint already includes the full URL structure
+    const azureUrl = azureEndpoint.includes('/openai/deployments/') 
+      ? azureEndpoint 
+      : `${azureEndpoint}/openai/deployments/${deploymentName}/chat/completions?api-version=2024-02-15-preview`;
+    
+    console.log('Making request to Azure URL:', azureUrl);
+    
+    const azureResponse = await fetch(azureUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -23,11 +23,26 @@ const TalentPool = () => {
     assessment.status === 'completed' && assessment.verdict === 'failed'
   );
 
+  // Get candidate name from assessment data
+  const getCandidateName = (candidateId: string) => {
+    const candidateNames = {
+      'candidate-001': 'Yassine Skoutti',
+      'candidate-002': 'Anna Saiapina', 
+      'candidate-003': 'Mohammed Nijas.K.K',
+      'candidate-004': 'Naresh Potla',
+      'candidate-005': 'Volodymyr Yurkov',
+      'candidate-006': 'Asmaa Sayed',
+      'candidate-007': 'Usman Ghani',
+      'candidate-008': 'Namindu Nadeeshan'
+    };
+    return candidateNames[candidateId as keyof typeof candidateNames] || `Candidate ${candidateId?.slice(0, 8) || 'Unknown'}`;
+  };
+
   // Combine all candidates with their status
   const allCandidates = [
     ...passedAssessments.map(assessment => ({
       id: assessment.candidateId,
-      name: `Candidate ${assessment.candidateId?.slice(0, 8) || 'Unknown'}`,
+      name: getCandidateName(assessment.candidateId),
       score: assessment.score || 0,
       status: 'passed' as const,
       feedback: assessment.feedback,
@@ -36,7 +51,7 @@ const TalentPool = () => {
     })),
     ...failedAssessments.map(assessment => ({
       id: assessment.candidateId,
-      name: `Candidate ${assessment.candidateId?.slice(0, 8) || 'Unknown'}`,
+      name: getCandidateName(assessment.candidateId),
       score: assessment.score || 0,
       status: 'failed' as const,
       feedback: assessment.feedback,
