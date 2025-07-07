@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Star, TrendingUp, TrendingDown, MessageSquare, Bot, CheckCircle, XCircle, ClipboardCheck } from "lucide-react";
 import { useAgentState } from "@/hooks/useAgentState";
 import { useAssessmentCandidates } from "@/hooks/useAssessmentCandidates";
+import { usePagination } from "@/hooks/usePagination";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import Navigation from "@/components/Navigation";
 
 const TalentPool = () => {
@@ -57,6 +59,23 @@ const TalentPool = () => {
   const passedCount = passedAssessments.length;
   const rejectedCount = nonRecommendedCandidates.length + failedAssessments.length;
 
+  const {
+    currentPage,
+    totalPages,
+    paginatedData: paginatedCandidates,
+    goToPage,
+    goToPrevious,
+    goToNext,
+    hasNext,
+    hasPrevious,
+    totalItems,
+    startIndex,
+    endIndex
+  } = usePagination({
+    data: allCandidates,
+    itemsPerPage: 50
+  });
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Navigation />
@@ -65,6 +84,13 @@ const TalentPool = () => {
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-2">Talent Pool</h1>
             <p className="text-lg text-gray-600">Final talent pool with passed assessments and rejected candidates</p>
+            
+            {/* Pagination Info */}
+            {totalItems > 0 && (
+              <div className="mt-2 text-sm text-gray-500">
+                Showing {startIndex}-{endIndex} of {totalItems} candidates
+              </div>
+            )}
             
             {/* Status Overview */}
             <div className="mt-4 flex items-center gap-4">
@@ -120,7 +146,7 @@ const TalentPool = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-blue-600 mb-2">
-                  {allCandidates.length}
+                  {totalItems}
                 </div>
                 <p className="text-sm text-gray-600">All processed candidates</p>
               </CardContent>
@@ -139,7 +165,7 @@ const TalentPool = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {allCandidates.length === 0 ? (
+              {totalItems === 0 ? (
                 <div className="text-center py-12">
                   <Bot className="h-16 w-16 mx-auto mb-4 text-gray-400" />
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">No Candidates Yet</h3>
@@ -148,87 +174,133 @@ const TalentPool = () => {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {allCandidates.map((candidate) => (
-                    <Card key={candidate.id} className={`border ${
-                      candidate.status === 'passed' 
-                        ? 'border-green-200 bg-green-50/50' 
-                        : 'border-red-200 bg-red-50/50'
-                    } hover:shadow-md transition-shadow`}>
-                      <CardHeader className="pb-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <CardTitle className="text-lg text-gray-900">{candidate.name}</CardTitle>
-                            <CardDescription className="flex items-center gap-2 mt-1">
-                              {candidate.status === 'passed' ? (
-                                <>
-                                  <CheckCircle className="h-4 w-4 text-green-500" />
-                                  <span className="font-semibold text-green-700">{candidate.score}% Score</span>
-                                </>
-                              ) : (
-                                <>
-                                  <XCircle className="h-4 w-4 text-red-500" />
-                                  <span className="font-semibold text-red-700">{candidate.score}% Score</span>
-                                </>
-                              )}
-                            </CardDescription>
+                <>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {paginatedCandidates.map((candidate) => (
+                      <Card key={candidate.id} className={`border ${
+                        candidate.status === 'passed' 
+                          ? 'border-green-200 bg-green-50/50' 
+                          : 'border-red-200 bg-red-50/50'
+                      } hover:shadow-md transition-shadow`}>
+                        <CardHeader className="pb-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <CardTitle className="text-lg text-gray-900">{candidate.name}</CardTitle>
+                              <CardDescription className="flex items-center gap-2 mt-1">
+                                {candidate.status === 'passed' ? (
+                                  <>
+                                    <CheckCircle className="h-4 w-4 text-green-500" />
+                                    <span className="font-semibold text-green-700">{candidate.score}% Score</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <XCircle className="h-4 w-4 text-red-500" />
+                                    <span className="font-semibold text-red-700">{candidate.score}% Score</span>
+                                  </>
+                                )}
+                              </CardDescription>
+                            </div>
+                            <Badge className={
+                              candidate.status === 'passed' 
+                                ? "bg-green-100 text-green-800" 
+                                : "bg-red-100 text-red-800"
+                            }>
+                              {candidate.status === 'passed' ? 'Passed' : 
+                               candidate.status === 'failed' ? 'Failed Assessment' : 'Rejected'}
+                            </Badge>
                           </div>
-                          <Badge className={
-                            candidate.status === 'passed' 
-                              ? "bg-green-100 text-green-800" 
-                              : "bg-red-100 text-red-800"
-                          }>
-                            {candidate.status === 'passed' ? 'Passed' : 
-                             candidate.status === 'failed' ? 'Failed Assessment' : 'Rejected'}
-                          </Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">
-                            {candidate.type === 'assessment' ? 'Assessment Feedback' : 'AI Evaluation'}
-                          </h4>
-                          <p className="text-sm text-gray-700 bg-white/60 p-3 rounded border">
-                            {candidate.type === 'assessment' ? 
-                              ('feedback' in candidate ? candidate.feedback : 'No feedback available') : 
-                              ('reasoning' in candidate ? candidate.reasoning : 'No reasoning available')
-                            }
-                          </p>
-                        </div>
-
-                        {candidate.type === 'profile' && 'skills' in candidate && candidate.skills && candidate.skills.length > 0 && (
+                        </CardHeader>
+                        <CardContent className="space-y-4">
                           <div>
-                            <h4 className="font-semibold text-gray-900 mb-2">Skills</h4>
-                            <div className="flex flex-wrap gap-1">
-                              {candidate.skills.map((skill: string, index: number) => (
-                                <Badge key={index} variant="outline" className="text-xs">
-                                  {skill}
-                                </Badge>
-                              ))}
+                            <h4 className="font-semibold text-gray-900 mb-2">
+                              {candidate.type === 'assessment' ? 'Assessment Feedback' : 'AI Evaluation'}
+                            </h4>
+                            <p className="text-sm text-gray-700 bg-white/60 p-3 rounded border">
+                              {candidate.type === 'assessment' ? 
+                                ('feedback' in candidate ? candidate.feedback : 'No feedback available') : 
+                                ('reasoning' in candidate ? candidate.reasoning : 'No reasoning available')
+                              }
+                            </p>
+                          </div>
+
+                          {candidate.type === 'profile' && 'skills' in candidate && candidate.skills && candidate.skills.length > 0 && (
+                            <div>
+                              <h4 className="font-semibold text-gray-900 mb-2">Skills</h4>
+                              <div className="flex flex-wrap gap-1">
+                                {candidate.skills.map((skill: string, index: number) => (
+                                  <Badge key={index} variant="outline" className="text-xs">
+                                    {skill}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="flex justify-between items-center pt-4 border-t">
+                            <span className="text-xs text-gray-500">
+                              {candidate.type === 'assessment' ? 'Completed' : 'Evaluated'}: {new Date(candidate.evaluatedAt).toLocaleDateString()}
+                            </span>
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="outline">
+                                <MessageSquare className="h-4 w-4 mr-1" />
+                                {candidate.status === 'passed' ? 'Contact' : 'Feedback'}
+                              </Button>
+                              {candidate.status === 'passed' && (
+                                <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                                  Hire
+                                </Button>
+                              )}
                             </div>
                           </div>
-                        )}
-
-                        <div className="flex justify-between items-center pt-4 border-t">
-                          <span className="text-xs text-gray-500">
-                            {candidate.type === 'assessment' ? 'Completed' : 'Evaluated'}: {new Date(candidate.evaluatedAt).toLocaleDateString()}
-                          </span>
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="outline">
-                              <MessageSquare className="h-4 w-4 mr-1" />
-                              {candidate.status === 'passed' ? 'Contact' : 'Feedback'}
-                            </Button>
-                            {candidate.status === 'passed' && (
-                              <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                                Hire
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                  
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="mt-8 flex justify-center">
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious 
+                              onClick={goToPrevious}
+                              className={!hasPrevious ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                            />
+                          </PaginationItem>
+                          
+                          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                            const page = i + 1;
+                            return (
+                              <PaginationItem key={page}>
+                                <PaginationLink
+                                  onClick={() => goToPage(page)}
+                                  isActive={currentPage === page}
+                                  className="cursor-pointer"
+                                >
+                                  {page}
+                                </PaginationLink>
+                              </PaginationItem>
+                            );
+                          })}
+                          
+                          {totalPages > 5 && (
+                            <PaginationItem>
+                              <PaginationEllipsis />
+                            </PaginationItem>
+                          )}
+                          
+                          <PaginationItem>
+                            <PaginationNext 
+                              onClick={goToNext}
+                              className={!hasNext ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>

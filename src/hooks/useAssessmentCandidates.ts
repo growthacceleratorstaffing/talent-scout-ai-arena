@@ -19,6 +19,12 @@ export const useAssessmentCandidates = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Initialize with mock assessments from agentCommunicationService
+  useEffect(() => {
+    const mockAssessments = agentCommunicationService.getMockAssessments();
+    setAssessments(mockAssessments);
+  }, []);
+
   const startAssessment = async (candidate: any) => {
     setLoading(true);
     setError(null);

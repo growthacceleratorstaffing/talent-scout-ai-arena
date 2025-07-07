@@ -18,6 +18,7 @@ class AgentCommunicationService {
   };
 
   private stateSubscribers: ((state: AgentState) => void)[] = [];
+  private mockAssessments: any[] = [];
 
   constructor() {
     this.initializeWithSupabaseData();
@@ -60,6 +61,76 @@ class AgentCommunicationService {
           score: 92,
           jobId: 'job-002',
           interviewCompleted: true
+        },
+        {
+          candidateId: 'candidate-004',
+          candidateName: 'John Smith',
+          recommendation: 'recommend',
+          score: 81,
+          jobId: 'job-001',
+          interviewCompleted: true
+        },
+        {
+          candidateId: 'candidate-005',
+          candidateName: 'Lisa Wang',
+          recommendation: 'recommend',
+          score: 89,
+          jobId: 'job-002',
+          interviewCompleted: true
+        }
+      ];
+
+      // Add mock completed assessments
+      this.mockAssessments = [
+        {
+          id: 'assessment-001',
+          candidateId: 'candidate-001',
+          status: 'completed',
+          score: 87,
+          verdict: 'passed',
+          feedback: 'Excellent technical skills and problem-solving abilities. Strong communication and demonstrates deep understanding of software architecture.',
+          startedAt: '2024-01-10T10:00:00Z',
+          completedAt: '2024-01-10T11:30:00Z'
+        },
+        {
+          id: 'assessment-002',
+          candidateId: 'candidate-002',
+          status: 'completed',
+          score: 72,
+          verdict: 'passed',
+          feedback: 'Good technical foundation with solid coding skills. Shows potential for growth and learning.',
+          startedAt: '2024-01-11T14:00:00Z',
+          completedAt: '2024-01-11T15:45:00Z'
+        },
+        {
+          id: 'assessment-003',
+          candidateId: 'candidate-003',
+          status: 'completed',
+          score: 94,
+          verdict: 'passed',
+          feedback: 'Outstanding performance across all technical areas. Exceptional problem-solving and system design skills.',
+          startedAt: '2024-01-12T09:00:00Z',
+          completedAt: '2024-01-12T10:30:00Z'
+        },
+        {
+          id: 'assessment-004',
+          candidateId: 'candidate-004',
+          status: 'completed',
+          score: 58,
+          verdict: 'failed',
+          feedback: 'Shows basic understanding but lacks depth in key technical areas. Would benefit from additional training.',
+          startedAt: '2024-01-13T11:00:00Z',
+          completedAt: '2024-01-13T12:30:00Z'
+        },
+        {
+          id: 'assessment-005',
+          candidateId: 'candidate-005',
+          status: 'completed',
+          score: 79,
+          verdict: 'passed',
+          feedback: 'Strong technical skills with good analytical thinking. Demonstrates ability to work through complex problems.',
+          startedAt: '2024-01-14T15:00:00Z',
+          completedAt: '2024-01-14T16:30:00Z'
         }
       ];
 
@@ -296,6 +367,10 @@ class AgentCommunicationService {
     });
     // You could also update Supabase here if needed
     return updatedJobs.find(job => job.id === jobId);
+  }
+
+  getMockAssessments() {
+    return this.mockAssessments;
   }
 
   async startAssessment(assessmentData: any) {
