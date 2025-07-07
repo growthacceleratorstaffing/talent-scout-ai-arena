@@ -13,7 +13,8 @@ const Navigation = () => {
     { path: '/applicants', label: 'Applicants', icon: Users },
     { path: '/ai-interview', label: 'AI Interview', icon: Bot },
     { path: '/assessment', label: 'Assessment', icon: ClipboardCheck },
-    { path: '/talent-pool', label: 'Talent Pool', icon: UserX }
+    { path: '/talent-pool', label: 'Talent Pool', icon: UserX },
+    { path: '/matching', label: 'Matching', icon: Users }
   ];
 
   return (

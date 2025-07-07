@@ -9,6 +9,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Ads from "./pages/Ads";
 import TalentPool from "./pages/TalentPool";
+import Matching from "./pages/Matching";
 import Applicants from "./pages/Applicants";
 import LinkedIn from "./pages/LinkedIn";
 import Auth from "./pages/Auth";
@@ -49,6 +50,11 @@ const App = () => (
             <Route path="/talent-pool" element={
               <ProtectedRoute>
                 <TalentPool />
+              </ProtectedRoute>
+            } />
+            <Route path="/matching" element={
+              <ProtectedRoute>
+                <Matching />
               </ProtectedRoute>
             } />
             <Route path="/ai-interview" element={
