@@ -134,12 +134,48 @@ const Assessment: React.FC = () => {
             </Card>
           )}
 
+          {/* Active Assessments */}
+          {assessments.filter(a => a.status === 'in_progress' || a.status === 'pending').length > 0 && (
+            <Card className="p-6">
+              <h2 className="text-xl font-semibold mb-4">Active Assessments</h2>
+              <div className="space-y-4">
+                {assessments.filter(a => a.status === 'in_progress' || a.status === 'pending').map((assessment) => (
+                  <div key={assessment.id} className="p-4 border rounded-lg bg-blue-50">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-medium">
+                        Candidate {assessment.candidateId?.slice(0, 8) || 'Unknown'}
+                      </h3>
+                      <Badge variant="outline" className="bg-blue-100 text-blue-800">
+                        {assessment.status === 'in_progress' ? 'In Progress' : 'Pending'}
+                      </Badge>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      <p>Started: {new Date(assessment.startedAt).toLocaleString()}</p>
+                      {assessment.status === 'in_progress' && (
+                        <Button 
+                          className="mt-2" 
+                          size="sm"
+                          onClick={() => {
+                            const candidate = eligibleCandidates.find(c => c.candidateId === assessment.candidateId);
+                            if (candidate) setSelectedCandidate(candidate);
+                          }}
+                        >
+                          Continue Assessment
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
           {/* Assessment Results */}
-          {assessments.length > 0 && (
+          {assessments.filter(a => a.status === 'completed').length > 0 && (
             <Card className="p-6">
               <h2 className="text-xl font-semibold mb-4">Assessment Results</h2>
               <div className="space-y-4">
-                {assessments.map((assessment) => (
+                {assessments.filter(a => a.status === 'completed').map((assessment) => (
                   <div key={assessment.id} className="p-4 border rounded-lg">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-medium">
