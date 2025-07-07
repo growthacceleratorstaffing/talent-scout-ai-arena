@@ -96,89 +96,10 @@ const Assessment: React.FC = () => {
         </div>
 
         <div className="grid gap-6">
-          {/* Available Assessment Types */}
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Available Assessments</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <div className="p-4 border rounded-lg bg-blue-50">
-                <h3 className="font-semibold text-blue-800 mb-2">Technical Skills Assessment</h3>
-                <p className="text-sm text-gray-600 mb-3">
-                  Evaluates coding abilities, problem-solving, and technical knowledge in relevant programming languages and frameworks.
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  <Badge variant="outline" className="text-xs">JavaScript</Badge>
-                  <Badge variant="outline" className="text-xs">React</Badge>
-                  <Badge variant="outline" className="text-xs">Node.js</Badge>
-                  <Badge variant="outline" className="text-xs">Algorithms</Badge>
-                </div>
-              </div>
-              
-              <div className="p-4 border rounded-lg bg-green-50">
-                <h3 className="font-semibold text-green-800 mb-2">System Design Assessment</h3>
-                <p className="text-sm text-gray-600 mb-3">
-                  Tests architectural thinking, scalability concepts, and ability to design large-scale systems.
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  <Badge variant="outline" className="text-xs">Architecture</Badge>
-                  <Badge variant="outline" className="text-xs">Scalability</Badge>
-                  <Badge variant="outline" className="text-xs">Database Design</Badge>
-                </div>
-              </div>
-              
-              <div className="p-4 border rounded-lg bg-purple-50">
-                <h3 className="font-semibold text-purple-800 mb-2">Behavioral Assessment</h3>
-                <p className="text-sm text-gray-600 mb-3">
-                  Evaluates communication skills, teamwork, problem-solving approach, and cultural fit.
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  <Badge variant="outline" className="text-xs">Communication</Badge>
-                  <Badge variant="outline" className="text-xs">Leadership</Badge>
-                  <Badge variant="outline" className="text-xs">Teamwork</Badge>
-                </div>
-              </div>
-              
-              <div className="p-4 border rounded-lg bg-orange-50">
-                <h3 className="font-semibold text-orange-800 mb-2">Problem Solving Assessment</h3>
-                <p className="text-sm text-gray-600 mb-3">
-                  Tests logical thinking, analytical skills, and approach to complex problem resolution.
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  <Badge variant="outline" className="text-xs">Logic</Badge>
-                  <Badge variant="outline" className="text-xs">Analytics</Badge>
-                  <Badge variant="outline" className="text-xs">Critical Thinking</Badge>
-                </div>
-              </div>
-              
-              <div className="p-4 border rounded-lg bg-yellow-50">
-                <h3 className="font-semibold text-yellow-800 mb-2">Domain Knowledge Assessment</h3>
-                <p className="text-sm text-gray-600 mb-3">
-                  Assesses industry-specific knowledge and understanding of business processes.
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  <Badge variant="outline" className="text-xs">Industry Knowledge</Badge>
-                  <Badge variant="outline" className="text-xs">Best Practices</Badge>
-                  <Badge variant="outline" className="text-xs">Processes</Badge>
-                </div>
-              </div>
-              
-              <div className="p-4 border rounded-lg bg-teal-50">
-                <h3 className="font-semibold text-teal-800 mb-2">AI-Powered Adaptive Assessment</h3>
-                <p className="text-sm text-gray-600 mb-3">
-                  Dynamic assessment that adapts questions based on candidate responses and performance.
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  <Badge variant="outline" className="text-xs">Adaptive</Badge>
-                  <Badge variant="outline" className="text-xs">AI-Generated</Badge>
-                  <Badge variant="outline" className="text-xs">Personalized</Badge>
-                </div>
-              </div>
-            </div>
-          </Card>
-
           {/* Assessments Overview */}
           {assessments.length > 0 && (
             <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4">All Assessments</h2>
+              <h2 className="text-xl font-semibold mb-4">Assessments</h2>
               <div className="space-y-4">
                 {/* Active/Pending Assessments */}
                 {assessments.filter(a => a.status === 'in_progress' || a.status === 'pending').length > 0 && (
