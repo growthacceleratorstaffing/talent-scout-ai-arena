@@ -408,7 +408,7 @@ class AgentCommunicationService {
       }
     ];
     
-    return [...supabaseCandidates, ...mockPassedCandidates];
+    return mockPassedCandidates; // Return only mock candidates for assessment demo
   }
 
   getNonRecommendedCandidates() {
