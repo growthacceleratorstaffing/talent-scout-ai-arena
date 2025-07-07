@@ -18,25 +18,20 @@ serve(async (req) => {
 
     // Load Azure secrets from environment
     const azureApiKey = Deno.env.get('AZURE_OPENAI_API_KEY');
-    const azureEndpoint = Deno.env.get('AZURE_OPENAI_ENDPOINT');
-    const deploymentName = Deno.env.get('AZURE_OPENAI_DEPLOYMENT_NAME') || 'gpt-4o';
-
+    
     console.log('Azure config check:', {
-      hasApiKey: !!azureApiKey,
-      hasEndpoint: !!azureEndpoint,
-      deploymentName: deploymentName,
-      endpointFormat: azureEndpoint
+      hasApiKey: !!azureApiKey
     });
 
-    if (!azureApiKey || !azureEndpoint) {
-      return new Response(JSON.stringify({ error: "Azure API credentials not configured. Please set AZURE_OPENAI_API_KEY and AZURE_OPENAI_ENDPOINT." }), {
+    if (!azureApiKey) {
+      return new Response(JSON.stringify({ error: "Azure API credentials not configured. Please set AZURE_OPENAI_API_KEY." }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       });
     }
 
-    // Construct the proper Azure OpenAI endpoint URL with updated API version
-    const azureUrl = `${azureEndpoint}/openai/deployments/${deploymentName}/chat/completions?api-version=2024-02-15-preview`;
+    // Use the correct Azure OpenAI endpoint
+    const azureUrl = 'https://bart-majnl2y1-swedencentral.cognitiveservices.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview';
     
     console.log('Making request to Azure URL:', azureUrl);
 
@@ -72,7 +67,7 @@ serve(async (req) => {
       // Provide more specific error messages
       if (azureRes.status === 404) {
         return new Response(JSON.stringify({ 
-          error: `Azure deployment not found. Check if deployment name '${deploymentName}' exists and endpoint is correct. Endpoint should be like: https://your-resource.openai.azure.com` 
+          error: `Azure deployment not found. Check if deployment 'gpt-4o' exists and endpoint is correct. Endpoint should be like: https://your-resource.openai.azure.com` 
         }), {
           status: 404,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }

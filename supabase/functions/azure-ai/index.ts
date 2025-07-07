@@ -19,9 +19,8 @@ serve(async (req) => {
 
     // Get Azure AI credentials from environment
     const azureApiKey = Deno.env.get('AZURE_OPENAI_API_KEY');
-    const azureEndpoint = Deno.env.get('AZURE_OPENAI_ENDPOINT');
-
-    if (!azureApiKey || !azureEndpoint) {
+    
+    if (!azureApiKey) {
       console.error('Missing Azure AI credentials');
       return new Response(
         JSON.stringify({ error: 'Azure AI credentials not configured' }),
@@ -32,16 +31,10 @@ serve(async (req) => {
       );
     }
 
-    console.log('Azure endpoint:', azureEndpoint);
     console.log('API key available:', !!azureApiKey);
 
-    // Prepare the request to Azure OpenAI - fix endpoint format
-    const deploymentName = Deno.env.get('AZURE_OPENAI_DEPLOYMENT_NAME') || 'gpt-4o';
-    
-    // Check if endpoint already includes the full URL structure
-    const azureUrl = azureEndpoint.includes('/openai/deployments/') 
-      ? azureEndpoint 
-      : `${azureEndpoint}/openai/deployments/${deploymentName}/chat/completions?api-version=2024-02-15-preview`;
+    // Use the correct Azure OpenAI endpoint
+    const azureUrl = 'https://bart-majnl2y1-swedencentral.cognitiveservices.azure.com/openai/deployments/gpt-4o/chat/completions?api-version=2024-02-15-preview';
     
     console.log('Making request to Azure URL:', azureUrl);
     
