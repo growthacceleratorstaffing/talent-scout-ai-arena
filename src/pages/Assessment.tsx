@@ -206,6 +206,26 @@ const Assessment: React.FC = () => {
             </Card>
           )}
 
+          {/* Demo Assessment Button */}
+          <Card className="p-6 mb-6">
+            <h2 className="text-xl font-semibold mb-4">Start Assessment</h2>
+            <p className="text-gray-600 mb-4">
+              Start a demo assessment to see how the assessment system works
+            </p>
+            <Button 
+              onClick={() => handleStartAssessment({ 
+                candidateId: 'demo-candidate', 
+                candidateName: 'Demo Candidate',
+                score: 85,
+                recommendation: 'recommend'
+              })}
+              disabled={loading}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Start Demo Assessment
+            </Button>
+          </Card>
+
           {/* Eligible candidates for assessment */}
           <Card className="p-6">
             <h2 className="text-xl font-semibold mb-4">Candidates Ready for Assessment</h2>
