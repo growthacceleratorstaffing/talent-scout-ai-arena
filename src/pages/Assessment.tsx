@@ -27,7 +27,7 @@ const Assessment: React.FC = () => {
                       candidate.score >= 70;
     
     console.log('[Assessment] Candidate eligibility check:', {
-      candidate: candidate?.candidateName || candidate?.candidateId,
+      candidate: candidate?.candidateName || candidate?.name || candidate?.candidateId,
       hasId: !!candidate?.candidateId,
       recommendation: candidate?.recommendation,
       score: candidate?.score,
