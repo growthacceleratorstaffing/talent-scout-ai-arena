@@ -96,6 +96,78 @@ const Assessment: React.FC = () => {
         </div>
 
         <div className="grid gap-6">
+          {/* Assessments Overview */}
+          {assessments.length > 0 && (
+            <Card className="p-6">
+              <h2 className="text-xl font-semibold mb-4">All Assessments</h2>
+              <div className="space-y-4">
+                {/* Active/Pending Assessments */}
+                {assessments.filter(a => a.status === 'in_progress' || a.status === 'pending').length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-medium mb-3 text-blue-700">Active Assessments</h3>
+                    <div className="space-y-3">
+                      {assessments.filter(a => a.status === 'in_progress' || a.status === 'pending').map((assessment) => (
+                        <div key={assessment.id} className="p-4 border rounded-lg bg-blue-50">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-medium">
+                              Candidate {assessment.candidateId?.slice(0, 8) || 'Unknown'}
+                            </h4>
+                            <Badge variant="outline" className="bg-blue-100 text-blue-800">
+                              {assessment.status === 'in_progress' ? 'In Progress' : 'Pending'}
+                            </Badge>
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            <p>Started: {new Date(assessment.startedAt).toLocaleString()}</p>
+                            {assessment.status === 'in_progress' && (
+                              <Button 
+                                className="mt-2" 
+                                size="sm"
+                                onClick={() => {
+                                  const candidate = eligibleCandidates.find(c => c.candidateId === assessment.candidateId);
+                                  if (candidate) setSelectedCandidate(candidate);
+                                }}
+                              >
+                                Continue Assessment
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Completed Assessments */}
+                {assessments.filter(a => a.status === 'completed').length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-medium mb-3 text-gray-700">Completed Assessments</h3>
+                    <div className="space-y-3">
+                      {assessments.filter(a => a.status === 'completed').map((assessment) => (
+                        <div key={assessment.id} className="p-4 border rounded-lg">
+                          <div className="flex items-center justify-between mb-2">
+                            <h4 className="font-medium">
+                              Candidate {assessment.candidateId?.slice(0, 8) || 'Unknown'}
+                            </h4>
+                            <Badge variant={assessment.verdict === 'passed' ? 'default' : 'destructive'}>
+                              {assessment.verdict}
+                            </Badge>
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            <p>Score: {assessment.score}/100</p>
+                            <p>Completed: {new Date(assessment.completedAt || '').toLocaleString()}</p>
+                            {assessment.feedback && (
+                              <p className="mt-2 italic">"{assessment.feedback}"</p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </Card>
+          )}
+
           {/* Show message if there are candidates who need AI interview first */}
           {nonInterviewedCandidates.length > 0 && (
             <Card className="p-6 border-yellow-200 bg-yellow-50">
@@ -130,70 +202,6 @@ const Assessment: React.FC = () => {
                     ... and {nonInterviewedCandidates.length - 3} more
                   </p>
                 )}
-              </div>
-            </Card>
-          )}
-
-          {/* Active Assessments */}
-          {assessments.filter(a => a.status === 'in_progress' || a.status === 'pending').length > 0 && (
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4">Active Assessments</h2>
-              <div className="space-y-4">
-                {assessments.filter(a => a.status === 'in_progress' || a.status === 'pending').map((assessment) => (
-                  <div key={assessment.id} className="p-4 border rounded-lg bg-blue-50">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-medium">
-                        Candidate {assessment.candidateId?.slice(0, 8) || 'Unknown'}
-                      </h3>
-                      <Badge variant="outline" className="bg-blue-100 text-blue-800">
-                        {assessment.status === 'in_progress' ? 'In Progress' : 'Pending'}
-                      </Badge>
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      <p>Started: {new Date(assessment.startedAt).toLocaleString()}</p>
-                      {assessment.status === 'in_progress' && (
-                        <Button 
-                          className="mt-2" 
-                          size="sm"
-                          onClick={() => {
-                            const candidate = eligibleCandidates.find(c => c.candidateId === assessment.candidateId);
-                            if (candidate) setSelectedCandidate(candidate);
-                          }}
-                        >
-                          Continue Assessment
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          )}
-
-          {/* Assessment Results */}
-          {assessments.filter(a => a.status === 'completed').length > 0 && (
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4">Assessment Results</h2>
-              <div className="space-y-4">
-                {assessments.filter(a => a.status === 'completed').map((assessment) => (
-                  <div key={assessment.id} className="p-4 border rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-medium">
-                        Candidate {assessment.candidateId?.slice(0, 8) || 'Unknown'}
-                      </h3>
-                      <Badge variant={assessment.verdict === 'passed' ? 'default' : 'destructive'}>
-                        {assessment.verdict}
-                      </Badge>
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      <p>Score: {assessment.score}/100</p>
-                      <p>Completed: {new Date(assessment.completedAt || '').toLocaleString()}</p>
-                      {assessment.feedback && (
-                        <p className="mt-2 italic">"{assessment.feedback}"</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
               </div>
             </Card>
           )}
