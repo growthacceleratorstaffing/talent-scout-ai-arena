@@ -88,6 +88,25 @@ const Assessment: React.FC = () => {
         </div>
 
         <div className="grid gap-6">
+          {/* Start Assessment Button */}
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Start Assessment</h2>
+            <p className="text-gray-600 mb-4">
+              Start a demo assessment to see how the assessment system works
+            </p>
+            <Button 
+              onClick={() => handleStartAssessment({ 
+                candidateId: 'demo-candidate', 
+                candidateName: 'Demo Candidate',
+                score: 85,
+                recommendation: 'recommend'
+              })}
+              disabled={loading}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Start Assessment
+            </Button>
+          </Card>
           {/* Assessments Overview */}
           {assessments.length > 0 && (
             <Card className="p-6">
@@ -132,7 +151,7 @@ const Assessment: React.FC = () => {
                 {/* Completed Assessments */}
                 {assessments.filter(a => a.status === 'completed').length > 0 && (
                   <div>
-                    <h3 className="text-lg font-medium mb-3 text-gray-700">Completed Assessments</h3>
+                    <h3 className="text-lg font-medium mb-3 text-gray-700">Ready for assessment</h3>
                     <div className="space-y-3">
                       {assessments.filter(a => a.status === 'completed').map((assessment) => (
                         <div key={assessment.id} className="p-4 border rounded-lg">
@@ -200,7 +219,7 @@ const Assessment: React.FC = () => {
 
           {/* Eligible candidates for assessment */}
           <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4">Candidates Ready for Assessment</h2>
+            <h2 className="text-xl font-semibold mb-4">Completed Assessments</h2>
             <div className="space-y-4">
               {eligibleCandidates.length === 0 ? (
                 <div className="text-center py-8">
