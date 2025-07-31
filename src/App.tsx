@@ -14,6 +14,7 @@ import Applicants from "./pages/Applicants";
 import LinkedIn from "./pages/LinkedIn";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import FloatingAIAgent from "@/components/ai/FloatingAIAgent";
 import SuperAIAgent from "@/components/ai/SuperAIAgent";
 import AiInterview from "./pages/AiInterview";
@@ -72,6 +73,7 @@ const App = () => (
                 <LinkedIn />
               </ProtectedRoute>
             } />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

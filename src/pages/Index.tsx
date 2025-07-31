@@ -413,6 +413,17 @@ const Index = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Footer with Privacy Policy */}
+        <div className="mt-12 pt-8 border-t border-gray-200">
+          <div className="text-center">
+            <Link to="/privacy-policy">
+              <Button variant="ghost" className="text-gray-500 hover:text-gray-700">
+                Privacy Policy
+              </Button>
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   );
