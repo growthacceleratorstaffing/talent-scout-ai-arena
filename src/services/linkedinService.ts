@@ -45,29 +45,44 @@ export interface LinkedInLead {
 
 export const linkedInService = {
   async syncAdAccounts() {
+    console.log('Calling linkedin-sync edge function for ad accounts...');
     const { data, error } = await supabase.functions.invoke('linkedin-sync', {
       body: { action: 'sync-ad-accounts' }
     });
 
-    if (error) throw error;
+    console.log('Edge function response:', { data, error });
+    if (error) {
+      console.error('Edge function error:', error);
+      throw error;
+    }
     return data;
   },
 
   async syncCampaigns() {
+    console.log('Calling linkedin-sync edge function for campaigns...');
     const { data, error } = await supabase.functions.invoke('linkedin-sync', {
       body: { action: 'sync-campaigns' }
     });
 
-    if (error) throw error;
+    console.log('Edge function response:', { data, error });
+    if (error) {
+      console.error('Edge function error:', error);
+      throw error;
+    }
     return data;
   },
 
   async syncLeads() {
+    console.log('Calling linkedin-sync edge function for leads...');
     const { data, error } = await supabase.functions.invoke('linkedin-sync', {
       body: { action: 'sync-leads' }
     });
 
-    if (error) throw error;
+    console.log('Edge function response:', { data, error });
+    if (error) {
+      console.error('Edge function error:', error);
+      throw error;
+    }
     return data;
   },
 
