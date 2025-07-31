@@ -64,13 +64,28 @@ class OptimizedMonitoringService {
     const services: Record<string, string> = {};
 
     try {
-      // Use resource optimizer for efficient network calls
-      await resourceOptimizer.optimizedFetch('/api/health', {
-        method: 'GET'
-      }, 30000); // 30 second cache
+      // Direct fetch to health endpoint to avoid JSON parsing issues
+      const response = await fetch('/api/health', {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      });
       
-      services.server = 'connected';
+      if (response.ok) {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          await response.json(); // Validate it's actually JSON
+          services.server = 'connected';
+        } else {
+          services.server = 'failed';
+        }
+      } else {
+        services.server = 'failed';
+      }
     } catch (error) {
+      console.warn('Health check failed:', error);
       services.server = 'failed';
     }
 
