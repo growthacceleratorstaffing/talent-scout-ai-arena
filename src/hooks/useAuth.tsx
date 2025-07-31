@@ -10,7 +10,6 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signInWithLinkedIn: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   isAdmin: boolean;
 }
@@ -145,45 +144,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  const signInWithLinkedIn = async () => {
-    try {
-      console.log('Starting LinkedIn OAuth flow...');
-      console.log('Current URL:', window.location.href);
-      
-      const redirectUrl = `${getBaseUrl()}/`;
-      
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'linkedin_oidc',
-        options: {
-          redirectTo: redirectUrl,
-          scopes: 'openid profile email'
-        }
-      });
-
-      console.log('LinkedIn OAuth response:', { data, error });
-
-      if (error) {
-        console.error('LinkedIn OAuth error:', error);
-        toast({
-          title: "LinkedIn Sign In Error",
-          description: error.message,
-          variant: "destructive"
-        });
-        return { error };
-      }
-
-      console.log('LinkedIn OAuth initiated successfully');
-      return { error: null };
-    } catch (error: any) {
-      console.error('LinkedIn OAuth exception:', error);
-      toast({
-        title: "LinkedIn Sign In Error",
-        description: error.message || 'An unexpected error occurred',
-        variant: "destructive"
-      });
-      return { error };
-    }
-  };
 
   const signOut = async () => {
     try {
@@ -208,7 +168,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     loading,
     signUp,
     signIn,
-    signInWithLinkedIn,
     signOut,
     isAdmin
   };
