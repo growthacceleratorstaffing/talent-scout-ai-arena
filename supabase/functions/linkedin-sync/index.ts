@@ -77,11 +77,16 @@ serve(async (req) => {
 
 async function getLinkedInAccessToken() {
   const token = Deno.env.get('LINKEDIN_ACCESS_TOKEN')
+  console.log('=== TOKEN CHECK ===')
   console.log('Access token available:', !!token)
   if (token) {
     console.log('Token length:', token.length)
     console.log('Token prefix:', token.substring(0, 20) + '...')
+    console.log('Token has Bearer prefix:', token.startsWith('Bearer'))
+  } else {
+    console.log('ERROR: No LINKEDIN_ACCESS_TOKEN found in environment')
   }
+  console.log('=== END TOKEN CHECK ===')
   return token
 }
 
