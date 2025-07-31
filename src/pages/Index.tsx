@@ -1,4 +1,4 @@
-import React, { lazy } from 'react';
+import React from 'react';
 import Navigation from '@/components/Navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -14,47 +14,97 @@ import {
   Target,
   ArrowRight,
   Zap,
-  Brain
+  Brain,
+  CheckCircle,
+  XCircle,
+  Star,
+  Briefcase,
+  Bot
 } from "lucide-react";
 import { Link } from 'react-router-dom';
-import LazyWrapper from '@/components/LazyWrapper';
-
-// Lazy load the monitoring dashboard to reduce initial bundle size
-const OptimizedMonitoringDashboard = lazy(() => import('@/components/monitoring/OptimizedMonitoringDashboard'));
+import { useAgentState } from '@/hooks/useAgentState';
+import { useAssessmentCandidates } from '@/hooks/useAssessmentCandidates';
 
 const Index = () => {
+  const { recommendedCandidates, nonRecommendedCandidates, activeJobs, systemStatus } = useAgentState();
+  const { assessments } = useAssessmentCandidates();
+
+  // Calculate real-time stats
+  const passedAssessments = assessments.filter(assessment => 
+    assessment.status === 'completed' && assessment.verdict === 'passed'
+  );
+  const failedAssessments = assessments.filter(assessment => 
+    assessment.status === 'completed' && assessment.verdict === 'failed'
+  );
+
   const stats = {
-    totalApplications: 156,
-    recommended: 12,
-    nonRecommended: 28,
-    pendingReview: 116,
-    activeJobs: 3,
-    avgMatchScore: 67
+    totalApplications: recommendedCandidates.length + nonRecommendedCandidates.length,
+    recommended: recommendedCandidates.length,
+    passedAssessments: passedAssessments.length,
+    rejectedCandidates: nonRecommendedCandidates.length + failedAssessments.length,
+    activeJobs: activeJobs.length,
+    avgMatchScore: recommendedCandidates.length > 0 ? 
+      Math.round(recommendedCandidates.reduce((sum, c) => sum + c.score, 0) / recommendedCandidates.length) : 0
   };
+
+  // Mock AI-generated matches for matching section
+  const matches = [
+    {
+      id: 'match-001',
+      candidateName: 'Sarah Johnson',
+      candidateScore: 87,
+      jobTitle: 'Senior Frontend Developer',
+      company: 'TechCorp Inc.',
+      matchScore: 92,
+      status: 'pending'
+    },
+    {
+      id: 'match-002',
+      candidateName: 'Emma Davis',
+      candidateScore: 94,
+      jobTitle: 'Full Stack Engineer',
+      company: 'StartupXYZ',
+      matchScore: 89,
+      status: 'pending'
+    },
+    {
+      id: 'match-003',
+      candidateName: 'Lisa Wang',
+      candidateScore: 79,
+      jobTitle: 'Senior Frontend Developer',
+      company: 'TechCorp Inc.',
+      matchScore: 85,
+      status: 'matched'
+    }
+  ];
+
+  const pendingMatches = matches.filter(m => m.status === 'pending').length;
+  const completedMatches = matches.filter(m => m.status === 'matched').length;
 
   const recentActivity = [
     {
       type: 'application',
-      title: 'New application for Senior Full Stack Developer',
+      title: 'New AI-recommended candidate',
       candidate: 'Sarah Chen',
       score: 94,
       time: '2 hours ago',
       status: 'recommended'
     },
     {
-      type: 'job',
-      title: 'Job advertisement published',
-      job: 'UX/UI Designer',
+      type: 'assessment',
+      title: 'Assessment completed',
+      candidate: 'Emma Davis',
+      score: 89,
       time: '4 hours ago',
-      status: 'published'
+      status: 'passed'
     },
     {
-      type: 'evaluation',
-      title: 'AI evaluation completed',
-      candidate: 'Marcus Rodriguez',
-      score: 91,
+      type: 'match',
+      title: 'AI match generated',
+      candidate: 'Lisa Wang',
+      score: 85,
       time: '6 hours ago',
-      status: 'recommended'
+      status: 'matched'
     }
   ];
 
@@ -78,8 +128,8 @@ const Index = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            {/* Blue (Job Ads) */}
+          {/* Main Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <Card className="shadow-lg border-0 bg-gradient-to-br from-blue-50 to-blue-100 text-blue-900">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
@@ -92,7 +142,6 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            {/* Green/Emerald (Talent Pool) */}
             <Card className="shadow-lg border-0 bg-gradient-to-br from-green-50 to-emerald-100 text-emerald-900">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
@@ -105,7 +154,18 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            {/* Orange/Red (Profiles) */}
+            <Card className="shadow-lg border-0 bg-gradient-to-br from-purple-50 to-purple-100 text-purple-900">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-3xl font-bold">{stats.passedAssessments}</div>
+                    <div className="text-purple-700">Passed Assessments</div>
+                  </div>
+                  <CheckCircle className="h-12 w-12 text-purple-300" />
+                </div>
+              </CardContent>
+            </Card>
+
             <Card className="shadow-lg border-0 bg-gradient-to-br from-red-50 to-orange-100 text-orange-900">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
@@ -132,7 +192,7 @@ const Index = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Link to="/ads">
                 <Button className="w-full h-16 bg-gradient-to-r from-blue-100 to-blue-200 hover:from-blue-200 hover:to-blue-300 text-left justify-start text-blue-900 font-semibold">
                   <div className="flex items-center gap-3">
@@ -146,26 +206,39 @@ const Index = () => {
                 </Button>
               </Link>
 
-              <Link to="/talent-pool">
+              <Link to="/applicants">
                 <Button className="w-full h-16 bg-gradient-to-r from-green-100 to-emerald-100 hover:from-green-200 hover:to-emerald-200 text-left justify-start text-emerald-900 font-semibold">
                   <div className="flex items-center gap-3">
-                    <Users className="h-6 w-6" />
+                    <UserCheck className="h-6 w-6" />
                     <div>
-                      <div className="font-semibold">View Talent Pool</div>
-                      <div className="text-sm opacity-90">Recommended candidates</div>
+                      <div className="font-semibold">View Applicants</div>
+                      <div className="text-sm opacity-90">{stats.recommended} recommended</div>
                     </div>
                   </div>
                   <ArrowRight className="h-4 w-4 ml-auto" />
                 </Button>
               </Link>
 
-              <Link to="/profiles">
+              <Link to="/talent-pool">
+                <Button className="w-full h-16 bg-gradient-to-r from-purple-100 to-purple-200 hover:from-purple-200 hover:to-purple-300 text-left justify-start text-purple-900 font-semibold">
+                  <div className="flex items-center gap-3">
+                    <Users className="h-6 w-6" />
+                    <div>
+                      <div className="font-semibold">Talent Pool</div>
+                      <div className="text-sm opacity-90">{stats.passedAssessments} qualified</div>
+                    </div>
+                  </div>
+                  <ArrowRight className="h-4 w-4 ml-auto" />
+                </Button>
+              </Link>
+
+              <Link to="/matching">
                 <Button className="w-full h-16 bg-gradient-to-r from-red-100 to-orange-100 hover:from-red-200 hover:to-orange-200 text-left justify-start text-orange-900 font-semibold">
                   <div className="flex items-center gap-3">
-                    <UserX className="h-6 w-6" />
+                    <Target className="h-6 w-6" />
                     <div>
-                      <div className="font-semibold">Review Profiles</div>
-                      <div className="text-sm opacity-90">Non-recommended candidates</div>
+                      <div className="font-semibold">AI Matching</div>
+                      <div className="text-sm opacity-90">{pendingMatches} pending matches</div>
                     </div>
                   </div>
                   <ArrowRight className="h-4 w-4 ml-auto" />
@@ -175,72 +248,126 @@ const Index = () => {
           </CardContent>
         </Card>
 
-        {/* System Health Monitoring - Now Optimized */}
-        <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-sm mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Brain className="h-6 w-6 text-blue-500" />
-              System Health & Monitoring
-            </CardTitle>
-            <CardDescription>
-              Optimized real-time health checks and resource monitoring
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <LazyWrapper>
-              <OptimizedMonitoringDashboard />
-            </LazyWrapper>
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* AI System Status */}
-          <Card className="shadow-lg border-0 bg-gradient-to-br from-blue-50 to-blue-100 backdrop-blur-sm">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          {/* AI Applicants Overview */}
+          <Card className="shadow-lg border-0 bg-gradient-to-br from-green-50 to-emerald-100 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Brain className="h-6 w-6 text-blue-500" />
-                AI System Status
+                <UserCheck className="h-6 w-6 text-emerald-600" />
+                AI-Recommended Applicants
               </CardTitle>
               <CardDescription>
-                Azure AI Foundry integration and agent performance
+                Top candidates evaluated by AI agents
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Orchestrator Agent</span>
-                  <Badge className="bg-green-100 text-green-800">Active</Badge>
-                </div>
-                <Progress value={95} className="h-2" />
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Job Ad Generator</span>
-                  <Badge className="bg-green-100 text-green-800">Active</Badge>
-                </div>
-                <Progress value={88} className="h-2" />
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Candidate Evaluator</span>
-                  <Badge className="bg-green-100 text-green-800">Active</Badge>
-                </div>
-                <Progress value={92} className="h-2" />
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">LinkedIn Integration</span>
-                  <Badge className="bg-orange-100 text-orange-800">Pending Auth</Badge>
-                </div>
-                <Progress value={0} className="h-2" />
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Total Recommended</span>
+                <Badge className="bg-emerald-100 text-emerald-800">{stats.recommended}</Badge>
               </div>
-
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Average Match Score</span>
+                <span className="font-semibold text-emerald-600">{stats.avgMatchScore}%</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">AI Engine Status</span>
+                <Badge className="bg-green-100 text-green-800">
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  {systemStatus === 'processing' ? 'Processing' : 'Ready'}
+                </Badge>
+              </div>
               <div className="pt-4 border-t">
-                <div className="flex items-center justify-between text-sm">
-                  <span>System Performance</span>
-                  <span className="font-semibold text-green-600">Excellent</span>
-                </div>
-                <div className="flex items-center justify-between text-sm mt-1">
-                  <span>Last Updated</span>
-                  <span className="text-gray-500">2 minutes ago</span>
-                </div>
+                <Link to="/applicants">
+                  <Button className="w-full bg-emerald-600 hover:bg-emerald-700">
+                    View All Applicants
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Talent Pool Overview */}
+          <Card className="shadow-lg border-0 bg-gradient-to-br from-blue-50 to-indigo-100 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-6 w-6 text-blue-600" />
+                Talent Pool Status
+              </CardTitle>
+              <CardDescription>
+                Assessment results and candidate pipeline
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  Passed Assessments
+                </span>
+                <Badge className="bg-green-100 text-green-800">{stats.passedAssessments}</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium flex items-center gap-2">
+                  <XCircle className="h-4 w-4 text-red-600" />
+                  Rejected Candidates
+                </span>
+                <Badge className="bg-red-100 text-red-800">{stats.rejectedCandidates}</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Total Pool Size</span>
+                <span className="font-semibold text-blue-600">{stats.passedAssessments + stats.rejectedCandidates}</span>
+              </div>
+              <div className="pt-4 border-t">
+                <Link to="/talent-pool">
+                  <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                    View Talent Pool
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* AI Matching Overview */}
+          <Card className="shadow-lg border-0 bg-gradient-to-br from-purple-50 to-pink-100 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="h-6 w-6 text-purple-600" />
+                AI Job Matching
+              </CardTitle>
+              <CardDescription>
+                Intelligent candidate-job matches
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Pending Matches</span>
+                <Badge className="bg-blue-100 text-blue-800">{pendingMatches}</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Completed Matches</span>
+                <Badge className="bg-green-100 text-green-800">{completedMatches}</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Qualified Pool</span>
+                <span className="font-semibold text-purple-600">{stats.passedAssessments}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">AI Matching Status</span>
+                <Badge className="bg-purple-100 text-purple-800">
+                  <CheckCircle className="h-3 w-3 mr-1" />
+                  Active
+                </Badge>
+              </div>
+              <div className="pt-4 border-t">
+                <Link to="/matching">
+                  <Button className="w-full bg-purple-600 hover:bg-purple-700">
+                    View Matches
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
@@ -253,7 +380,7 @@ const Index = () => {
                 Recent Activity
               </CardTitle>
               <CardDescription>
-                Latest actions and AI evaluations
+                Latest AI evaluations and matches
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -262,22 +389,26 @@ const Index = () => {
                   <div key={index} className="flex items-start gap-3 p-3 rounded-lg bg-white/40 hover:bg-white/70 transition-colors">
                     <div className={`w-2 h-2 rounded-full mt-2 ${
                       activity.status === 'recommended' ? 'bg-green-500' :
-                      activity.status === 'published' ? 'bg-blue-500' : 'bg-orange-400'
+                      activity.status === 'passed' ? 'bg-blue-500' :
+                      activity.status === 'matched' ? 'bg-purple-500' : 'bg-orange-400'
                     }`} />
                     <div className="flex-1">
                       <p className="text-sm font-medium">{activity.title}</p>
-                      {activity.candidate && (
-                        <p className="text-sm text-gray-600">
-                          {activity.candidate} • Match Score: {activity.score}%
-                        </p>
-                      )}
-                      {activity.job && (
-                        <p className="text-sm text-gray-600">{activity.job}</p>
-                      )}
+                      <p className="text-sm text-gray-600">
+                        {activity.candidate} • Score: {activity.score}%
+                      </p>
                       <p className="text-xs text-gray-500 mt-1">{activity.time}</p>
                     </div>
+                    <Badge variant="outline" className="text-xs">
+                      {activity.status}
+                    </Badge>
                   </div>
                 ))}
+              </div>
+              <div className="pt-4 border-t">
+                <div className="text-xs text-gray-500 text-center">
+                  All activities are tracked and powered by AI
+                </div>
               </div>
             </CardContent>
           </Card>
